@@ -58,6 +58,7 @@ HG38=../haps/hg38.fa
 SAMPLE_VCF=../haps/HGSVC.${SAMPLE}.vcf.gz
 
 CHROM=chr21
+REGIONS=chr21_non_repeats.bed
 GAM_PREFIX=${SAMPLE}_sim_5M
 NUMREADS=5000000
 NAME=simtest-$(basename ${HGSVC_BASE})-${SAMPLE}
@@ -81,16 +82,18 @@ then
 	 # Remap simulated reads to the full graph (takes about 3.5 hours on 32 cores)
 	 echo "Mapping simulated reads back to hgsvc graph"
 	 time vg map -d ${HGSVC_BASE} -f ${OS}/${GAM_PREFIX}.fq.gz -i  -t $THREADS > ${OS}/${GAM_PREFIX}_remapped.gam
+	 time vg gamsort ${OS}/${GAM_PREFIX}_remapped.gam -t $THREADS -i ${OS}/${GAM_PREFIX}_remapped_sorted.gam.gai >  ${OS}/${GAM_PREFIX}_remapped_sorted.gam
 
 	 # Remap simulated reads to the control graph
 	 time vg map -d ./controls/primary -f ${OS}/${GAM_PREFIX}.fq.gz -i  -t $THREADS > ${OS}/${GAM_PREFIX}_remapped_primary.gam
+	 time vg gamsort ${OS}/${GAM_PREFIX}_remapped_primary.gam -t $THREADS -i ${OS}/${GAM_PREFIX}_remapped_primary_sorted.gam.gai >  ${OS}/${GAM_PREFIX}_remapped_primary_sorted.gam
 
 	 # bwa mapping
 	 time bwa mem ./hg38.fa ${OS}/${GAM_PREFIX}_bwa.fq.gz -p -t $THREADS | samtools view -bS - > ${OS}/${GAM_PREFIX}_bwa_remapped.bam
 fi
 
 # run the calling and vcf evaluation
-rm -rf ${JS} calleval_${NAME}.log; toil-vg calleval ${JS} ${OS}/ --whole_genome_config --realTimeLogging --chroms ${CHROM} --gams ${OS}/${GAM_PREFIX}_remapped.gam ${OS}/${GAM_PREFIX}_remapped_primary.gam --gam_names hgsvc primary --xg_paths ${HGSVC_BASE}.xg ./controls/primary.xg --vcfeval_fasta ${HG38} --vcfeval_baseline ${SAMPLE_VCF}  --vcfeval_opts " --squash-ploidy --Xmax-length 15000" --logFile calleval_${NAME}.log --call  --sample_name ${SAMPLE} --workDir . --maxCores $THREADS 
+rm -rf ${JS} calleval_${NAME}.log; toil-vg calleval ${JS} ${OS}/  --realTimeLogging --chroms ${CHROM} --gams ${OS}/${GAM_PREFIX}_remapped_sorted.gam ${OS}/${GAM_PREFIX}_remapped_primary_sorted.gam --gam_names hgsvc primary --xg_paths ${HGSVC_BASE}.xg ./controls/primary.xg --vcfeval_fasta ${HG38} --vcfeval_baseline ${SAMPLE_VCF}  --vcfeval_opts " --squash-ploidy --Xmax-length 15000" --logFile calleval_${NAME}.log --call  --sample_name ${SAMPLE} --workDir . --maxCores $THREADS --recall --vcfeval_bed_regions $REGIONS --sveval 
 
 # disable freebayes and platypus for now.  they often produce no calls which crashes calleval
 #--bams ${OS}/${GAM_PREFIX}_bwa_remapped.bam --bam_names bwa  --freebayes --platypus
