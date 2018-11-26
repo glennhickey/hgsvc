@@ -12,7 +12,7 @@ chroms=chr21
 #HG38=../haps/hg38_chr21.fa 
 
 #Make graphs and indexes including the regular graph and the primary and the positive control
-rm -rf jsc ; toil-vg construct ./jsc ./graphs --fasta ${HG38} --vcf ../haps/HGSVC.HG00514.vcf.gz  --region ${chroms} --realTimeLogging  --xg_index --gcsa_index --out_name hgsvc.norm --flat_alts --normalize  --workDir . --gcsa_index_cores 20 --whole_genome_config --gbwt_index --gbwt_prune --primary --pangenome --pos_control HG00514
+rm -rf jsc ; toil-vg construct ./jsc ./graphs --fasta ${HG38} --vcf ../haps/HGSVC.haps.vcf.gz  --region ${chroms} --realTimeLogging  --xg_index --gcsa_index --out_name hgsvc.norm --flat_alts --normalize  --workDir . --gcsa_index_cores 20 --whole_genome_config --gbwt_index --gbwt_prune --primary --pangenome --pos_control HG00514
 
 #Make a bwa index
 bwa index ${HG38} -p ./graphs/hg38.fa
