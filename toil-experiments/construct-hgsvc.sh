@@ -1,4 +1,5 @@
 # Construct a graph for hg38 (chromosomes only) from the HGSVC vcf
+# EX ./construct-hgsvc.sh -c my-cluster my-jobstore my-bucket/hgsvc
 
 #!/bin/bash
 
@@ -69,6 +70,7 @@ VCF=../haps/HGSVC.haps.vcf.gz
 aws s3 mb s3://${OUTSTORE_NAME} --region ${REGION}
 sleep 5
 aws s3 cp ${VCF} s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz
+aws s3 cp ${VCF}.tbi s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz.tbi
 
 # without -r we start from scratch! 
 if [ $RESUME == 0 ]
