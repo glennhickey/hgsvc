@@ -98,5 +98,5 @@ then
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n r3.8xlarge:${BID},r3.8xlarge "map aws:${REGION}:${JOBSTORE_NAME} ${NAME} ${INDEX_BASE}.xg ${INDEX_BASE}.gcsa aws:${REGION}:${OUTSTORE_NAME} --id_ranges ${INDEX_BASE}_id_ranges.tsv ${READS_OPTS} ${MAP_OPTS} --whole_genome_config --logFile map.hgsvc.log --reads_per_chunk 5000000 --logFile map.hgsvc.log" | tee map.hgsvc.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n r3.8xlarge:${BID},r3.8xlarge "map aws:${REGION}:${JOBSTORE_NAME} ${NAME} ${INDEX_BASE}.xg ${INDEX_BASE}.gcsa aws:${REGION}:${OUTSTORE_NAME} --id_ranges ${INDEX_BASE}_id_ranges.tsv ${READS_OPTS} ${MAP_OPTS} --whole_genome_config --logFile map.hgsvc.log --reads_per_chunk 5000000 --logFile map.hgsvc.log" | tee map.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
 

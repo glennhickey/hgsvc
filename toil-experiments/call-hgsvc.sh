@@ -1,5 +1,6 @@
 # Call SVs on a hgsvc graph
-# EX ./map-hgsvc.sh -c my-cluster my-jobstore my-bucket/hgsvc/map s3://my-bucket/hgsvc/HGSVC.chroms hgsvc.chroms.map.HG00514 s3://my-bucket/hgsvc/sim/sim-HG00514-30x.fq.gz
+# EX ./call-hgsvc.sh -c my-cluster -f ./call_conf.yaml my-jobstore my-bucket/hgsvc/call s3://my-bucket/hgsvc/HGSVC-chroms.xg HG00514  s3://my-bucket/hgsvc/HGSVC-chroms/map-HG00514/HG00514-ERR903030-map_chr
+
 
 #!/bin/bash
 
@@ -7,7 +8,6 @@ BID=0.53
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
-MPMAP=0
 CONFIG_PATH=""
 HEAD_NODE=""
 
@@ -106,8 +106,8 @@ if [ "${GAM##*.}" = "gam" ]
 then
 	 GAM_OPTS="--gams ${GAM}"
 else
-	 GAM_OPTS="--gams $(for i in $(seq 1 22; echo X; echo Y); do echo ${GAM_BASE}${i}.gam; done)"
+	 GAM_OPTS="--gams $(for i in $(seq 1 22; echo X; echo Y); do echo ${GAM}${i}.gam; done)"
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --recall --logFile call.hgsvc.log" | tee call.hgsvc.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --recall --logFile call.hgsvc.log" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout

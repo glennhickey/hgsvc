@@ -80,4 +80,3 @@ fi
 
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcf s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz --out_name HGSVC.chroms --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index --pos_control HG00514 --haplo_sample HG00514 --normalize --regions $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --whole_genome_config --logFile construct.hgsvc.chroms.log" | tee construct.hgsvc.stdout
-

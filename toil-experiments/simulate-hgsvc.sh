@@ -3,7 +3,7 @@
 
 #!/bin/bash
 
-BID=0.53
+BID=0.78
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
@@ -19,7 +19,7 @@ usage() {
 	 printf "   HAPLO-XG2:     Full path to xg for haplotype 1\n"
 	 printf "   TEMPLATE-FQ:   Full path to interleaved fastq file to use as template\n"
 	 printf "Options:\n"
-	 printf "   -b BID  Spot bid in dollars for r3.8xlarge nodes [${BID}]\n"
+	 printf "   -b BID  Spot bid in dollars for i3.8xlarge nodes [${BID}]\n"
 	 printf "   -r      Resume existing job\n"
 	 printf "   -g      Aws region [${REGION}]\n"
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
@@ -75,8 +75,8 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
-CMD="sim aws:${REGION}:${JOBSTORE_NAME} s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_0.xg  s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_1.xg 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 1000 --seed 1 --whole_genome_config --logFile simulate.hgsvc.log"
+CMD="sim aws:${REGION}:${JOBSTORE_NAME} s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_0.xg  s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_1.xg 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 200 --seed 1 --whole_genome_config --logFile simulate.hgsvc.log"
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n r3.8xlarge:${BID},r3.8xlarge "${CMD}" | tee sim.hgsvc.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "${CMD}" | tee sim.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
 
