@@ -4,19 +4,19 @@
 The following environment variables need to be set
 ```
 # jobstore prefix: EX my-jobstore
-export JOBSTORE=glennhickey-jobstore-hn
+export JOBSTORE=
 # outstore: EX my-outstore/HGSVC
-export OUTSTORE=glennhickey/outstore/HGSVC-chroms-dec5
+export OUTSTORE=
 # cluster name prefix EX: my-cluster where my-cluster1 and my-cluster2 were already created with toil-vg/scripts/create-ec2-leader.sh
-export CLUSTER=glenn-hn
+export CLUSTER=
 # BED file for evaluation
-export COMPARE_REGIONS_BED=s3://vg-data/HGSVC/hg38_non_repeats.bed
+export COMPARE_REGIONS_BED=
 # interleaved fq template for simulation error model
-export TEMPLATE_FQ=s3://vg-data/HGSVC/reads/HG00514/ERR903030_1st_10M_interleaved.fq.gz
+export TEMPLATE_FQ=
 # input reads 1
-export FQ1=s3://vg-data/HGSVC/reads/HG00514/ERR903030_1.fastq.gz
+export FQ1=
 # input reads 2
-export FQ2=s3://vg-data/HGSVC/reads/HG00514/ERR903030_2.fastq.gz
+export FQ2=
 
 ```
 
