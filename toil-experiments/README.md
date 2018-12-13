@@ -38,6 +38,17 @@ export FQ2=
 ./map-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/map-HG00514-pc s3://${OUTSTORE}/HGSVC.chroms_HG00514 HG00514-ERR903030-map-pos-control ${FQ1} ${FQ2}
 
 # Call a VCF for each GAM, including the simulated "Truth" GAM
+
+# call_conf_truth.yaml is made with toil-vg generate-config --whole_genome then setting
+#  filter-opts: []
+#  augment-opts: ['-M']
+#  recall-opts: ['-u', '-n', '0', '-T']
+#
+#call_conf.yaml has:
+#  filter-opts: []
+#  augment-opts: []
+#  recall-opts: ['-u', '-n', '0']
+
 ./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf_truth.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-truth s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo.xg HG00514 s3://${OUTSTORE}/sim/sim-HG00514-30x-sorted.gam
 
 ./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514 s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514/HG00514-sim-map_chr
