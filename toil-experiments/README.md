@@ -42,9 +42,9 @@ export FQ2=
 
 ./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514 s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514/HG00514-sim-map_chr
 
-./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-pc s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514-pc/HG00514-sim-map-pos-control_chr
+./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-pc s3://${OUTSTORE}/HGSVC.chroms_HG00514.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514-pc/HG00514-sim-map-pos-control_chr
 
-./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-HG00514-pc s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514-pc/HG00514-ERR903030-map-pos-control_chr
+./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-HG00514-pc s3://${OUTSTORE}/HGSVC.chroms_HG00514.xg HG00514 s3://${OUTSTORE}/map-HG00514-pc/HG00514-ERR903030-map-pos-control_chr
 
 ./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-HG00514 s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-HG00514/HG00514-ERR903030-map_chr
 
