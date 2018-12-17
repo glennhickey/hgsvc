@@ -40,6 +40,8 @@ export FQ2=
 # Call a VCF for each GAM, including the simulated "Truth" GAM
 
 # call_conf_truth.yaml is made with toil-vg generate-config --whole_genome then setting
+# (note that toil-vg may set the container to None in your config if you don't have Docker locally.
+# in this case, it needs to be set back to Docker)
 #  filter-opts: []
 #  augment-opts: ['-M']
 #  recall-opts: ['-u', '-n', '0', '-T']
