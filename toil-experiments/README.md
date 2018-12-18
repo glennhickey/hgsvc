@@ -51,7 +51,7 @@ export FQ2=
 #  augment-opts: []
 #  recall-opts: ['-u', '-n', '0']
 
-./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf_truth.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-truth s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo.xg HG00514 s3://${OUTSTORE}/sim/sim-HG00514-30x-sorted.gam
+./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf_truth.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-truth s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo.xg HG00514 s3://${OUTSTORE}/sim/sim-HG00514-30x.gam
 
 ./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514 s3://${OUTSTORE}/HGSVC.chroms.xg HG00514 s3://${OUTSTORE}/map-sim-HG00514/HG00514-sim-map_chr
 
