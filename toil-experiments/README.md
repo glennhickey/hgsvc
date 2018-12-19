@@ -28,7 +28,7 @@ export FQ2=
 # Simulate a GAM and fastq from the two HG00514 haplotypes
 ./simulate-hgsvc.sh -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/sim s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo_thread_0.xg s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo_thread_1.xg ${TEMPLATE_FQ}
 
-# Map real and simulated reads against both the HGSVC and HG00514 (positive graph)
+# Map real and simulated reads against both the HGSVC and HG00514 graph (positive control)
 ./map-hgsvc.sh -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/map-sim-HG00514  s3://${OUTSTORE}/HGSVC.chroms HG00514-sim-map s3://${OUTSTORE}/sim/sim-HG00514-30x.fq.gz
 
 ./map-hgsvc.sh -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/map-sim-HG00514-pc  s3://${OUTSTORE}/HGSVC.chroms_HG00514 HG00514-sim-map-pos-control s3://${OUTSTORE}/sim/sim-HG00514-30x.fq.gz
@@ -71,4 +71,28 @@ export FQ2=
 ./eval-hgsvc.sh -d -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/eval-HG00514 s3://${OUTSTORE}/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/call-HG00514/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
 
 ./eval-hgsvc.sh -d -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/eval-HG00514-pc s3://${OUTSTORE}/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/call-HG00514-pc/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
+```
+
+## Mixing in Variants from Thousand Genomes
+
+```
+# Construct graph and index for HGSVC+1KG variatns.  Haploid vcfs from ../haps/haps.urls must have been downloaded into ../haps
+./construct-hgsvc.sh -k -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}
+
+# Map real reads against both the HGSVC+1KG and HGSVC+1KG-without-HG00514 graph (negative control)
+./map-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/map-1kg-HG00514 s3://${OUTSTORE}/HGSVC_1KG.chroms HG00514-ERR903030-map-1kg ${FQ1} ${FQ2}
+
+./map-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/map-1kg-HG00514-nc s3://${OUTSTORE}/HGSVC.chroms_minus_HG00514 HG00514-ERR903030-map-1kg-nc ${FQ1} ${FQ2}
+
+# Call a VCF for each GAM
+
+./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-1kg-HG00514 s3://${OUTSTORE}/HGSVC_1KG.chroms.xg HG00514 s3://${OUTSTORE}/map-1kg-HG00514/HG00514-ERR903030-map-1kg
+
+./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-1kg-HG00514-nc s3://${OUTSTORE}/HGSVC_1KG.chroms_minus_HG00514.xg HG00514 s3://${OUTSTORE}/map-HG00514/HG00514-ERR903030-1kg-nc
+
+# Do comparisons on called VCFs and download results locally
+
+./eval-hgsvc.sh -d -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/eval-1kg-HG00514 s3://${OUTSTORE}/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/call-1kg-HG00514/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
+
+./eval-hgsvc.sh -d -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/eval-1kg-HG00514-nc s3://${OUTSTORE}/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/call-1kg-HG00514-nc/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
 ```
