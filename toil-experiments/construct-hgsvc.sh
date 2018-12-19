@@ -7,6 +7,7 @@ BID=0.83
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
+INCLUDE_1KG=0
 
 usage() {
     # Print usage to stderr
@@ -20,10 +21,11 @@ usage() {
 	 printf "   -r      Resume existing job\n"
 	 printf "   -g      Aws region [${REGION}]\n"
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
+	 printf "   -k      include thousand genomes VCFs (resulting graph will have paths 1,2,3,... instead of chr1,chr2,chr3,..."
     exit 1
 }
 
-while getopts "b:re:c:" o; do
+while getopts "b:re:c:k" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -36,6 +38,9 @@ while getopts "b:re:c:" o; do
 				;;
 		  c)
 				HEAD_NODE_OPTS="-l ${OPTARG}"
+				;;
+		  k)
+				INCLUDE_1KG=1
 				;;
         *)
             usage
@@ -69,8 +74,8 @@ VCF=../haps/HGSVC.haps.vcf.gz
 # Get our vcf on S3 in our outstore
 aws s3 mb s3://${OUTSTORE_NAME} --region ${REGION}
 sleep 5
-aws s3 cp ${VCF} s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz
-aws s3 cp ${VCF}.tbi s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz.tbi
+aws s3 cp ${VCF} s3://${OUTSTORE_NAME}/
+aws s3 cp ${VCF}.tbi s3://${OUTSTORE_NAME}/
 
 # without -r we start from scratch! 
 if [ $RESUME == 0 ]
@@ -78,5 +83,28 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
+if [ $INCLUDE_1KG == 1 ]
+then
+	 # Make a renamed version of our HGSVC vcf to have consistent chrom names to 1kg
+	 RENAMED_VCF=./HGSVC.haps.rename.vcf.gz
+	 bcftools view $VCF | sed 's/chr//g' | bgzip > ${RENAMED_VCF}
+	 tabix -f -p vcf ${RENAMED_VCF}
+	 aws s3 cp ${RENAMED_VCF} s3://${OUTSTORE_NAME}/
+	 aws s3 cp ${RENAMED_VCF}.tbi s3://${OUTSTORE_NAME}/
+	 VCF=$(basename ${RENAMED_VCF})
+	 REGIONS="$(for i in $(seq 1 22; echo X; echo Y); do echo ${i}; done)"
+	 # Pass in a mix of our HGSVC and 1KG vcfs
+	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,s3://${OUTSTORE_NAME}/${VCF}; done)"
+	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+	 OUT_NAME="HGSVC_1KG.chroms"
+	 CONTROLS="--neg_control HG00514"
+else
+	 REGIONS="$(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done)"
+	 VCFS="s3://${OUTSTORE_NAME}/$(basename $VCF)"
+	 FASTA="http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+	 OUT_NAME="HGSVC.chroms"
+	 CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514"
+fi
+
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcf s3://${OUTSTORE_NAME}/HGSVC.haps.vcf.gz --out_name HGSVC.chroms --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index --pos_control HG00514 --haplo_sample HG00514 --normalize --regions $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --whole_genome_config --logFile construct.hgsvc.chroms.log" | tee construct.hgsvc.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index ${CONTROLS} --normalize --regions ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log" | tee construct.${OUT_NAME}.stdout
