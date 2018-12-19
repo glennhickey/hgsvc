@@ -85,10 +85,13 @@ fi
 wget -nc https://raw.githubusercontent.com/vgteam/toil-vg/master/scripts/ec2-run.sh
 chmod 777 ec2-run.sh
 
-# without -r we start from scratch! 
+# without -r we start from scratch!
+RESTART_FLAG=""
 if [ $RESUME == 0 ]
 then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
+else
+	 RESTART_FLAG="--restart"
 fi
 
 if [ -z ${CONFIG_PATH} ]
@@ -110,4 +113,4 @@ else
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --recall --logFile call.hgsvc.log" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --recall --logFile call.hgsvc.log ${RESTART_FLAG}" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout

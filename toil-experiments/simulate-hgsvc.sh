@@ -69,13 +69,16 @@ shift
 wget -nc https://raw.githubusercontent.com/vgteam/toil-vg/master/scripts/ec2-run.sh
 chmod 777 ec2-run.sh
 
-# without -r we start from scratch! 
+# without -r we start from scratch!
+RESTART_FLAG=""
 if [ $RESUME == 0 ]
 then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
+else
+	 RESTART_FLAG="--restart"
 fi
 
-CMD="sim aws:${REGION}:${JOBSTORE_NAME} ${XG0_PATH} ${XG1_PATH} 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 20 --seed 23 --validate --whole_genome_config --logFile simulate.hgsvc.log"
+CMD="sim aws:${REGION}:${JOBSTORE_NAME} ${XG0_PATH} ${XG1_PATH} 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 20 --seed 23 --validate --whole_genome_config --logFile simulate.hgsvc.log ${RESTART_FLAG}"
 
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "${CMD}" | tee sim.hgsvc.$(basename ${OUTSTORE_NAME}).stdout

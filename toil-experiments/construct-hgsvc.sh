@@ -77,10 +77,13 @@ sleep 5
 aws s3 cp ${VCF} s3://${OUTSTORE_NAME}/
 aws s3 cp ${VCF}.tbi s3://${OUTSTORE_NAME}/
 
-# without -r we start from scratch! 
+# without -r we start from scratch!
+RESTART_FLAG=""
 if [ $RESUME == 0 ]
 then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
+else
+	 RESTART_FLAG="--restart"
 fi
 
 if [ $INCLUDE_1KG == 1 ]
@@ -107,4 +110,4 @@ else
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index ${CONTROLS} --normalize --regions ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log" | tee construct.${OUT_NAME}.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index ${CONTROLS} --normalize --regions ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
