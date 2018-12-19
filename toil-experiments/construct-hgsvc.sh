@@ -100,14 +100,14 @@ then
 	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,s3://${OUTSTORE_NAME}/${VCF}; done)"
 	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 	 OUT_NAME="HGSVC_1KG.chroms"
-	 CONTROLS="--neg_control HG00514"
+	 CONTROLS="--min_af 0.01"
 else
 	 REGIONS="$(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done)"
 	 VCFS="s3://${OUTSTORE_NAME}/$(basename $VCF)"
 	 FASTA="http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 	 OUT_NAME="HGSVC.chroms"
-	 CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514"
+	 CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514 --pangenome"
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --pangenome --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index ${CONTROLS} --normalize --regions ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --flat_alts --xg_index --gcsa_index --gbwt_index --gbwt_prune --id_ranges_index ${CONTROLS} --normalize --regions ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
