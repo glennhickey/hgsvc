@@ -75,7 +75,7 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
-CMD="sim aws:${REGION}:${JOBSTORE_NAME} s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_0.xg  s3://vg-data/HGSVC/HGSVC.chroms_HG00514_haplo_thread_1.xg 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 100 --seed 1 --validate --whole_genome_config --logFile simulate.hgsvc.log"
+CMD="sim aws:${REGION}:${JOBSTORE_NAME} ${XG0_PATH} ${XG1_PATH} 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 20 --seed 23 --validate --whole_genome_config --logFile simulate.hgsvc.log"
 
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "${CMD}" | tee sim.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
