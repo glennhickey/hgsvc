@@ -76,6 +76,7 @@ aws s3 mb s3://${OUTSTORE_NAME} --region ${REGION}
 sleep 5
 aws s3 cp ${VCF} s3://${OUTSTORE_NAME}/
 aws s3 cp ${VCF}.tbi s3://${OUTSTORE_NAME}/
+S3VCF="s3://${OUTSTORE_NAME}/$(basename $VCF)"
 
 # without -r we start from scratch!
 RESTART_FLAG=""
@@ -90,13 +91,13 @@ if [ $INCLUDE_1KG == 1 ]
 then
 	 REGIONS=" --add_chr_prefix --fasta_regions --ignore_regions_keywords _alt HLA-"
 	 # Pass in a mix of our HGSVC and 1KG vcfs
-	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,${VCF}; done)"
+	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,${S3VCF}; done)"
 	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 	 OUT_NAME="HGSVC_1KG"
 	 CONTROLS="--min_af 0.01"
 else
 	 REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done)"
-	 VCFS="s3://${OUTSTORE_NAME}/$(basename $VCF)"
+	 VCFS="${S3VCF}"
 	 FASTA="http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 	 OUT_NAME="HGSVC.chroms"
 	 CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514 --pangenome"
