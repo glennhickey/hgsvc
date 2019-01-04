@@ -87,21 +87,22 @@ else
 	 RESTART_FLAG="--restart"
 fi
 
+# make a graph with chromosomes and decoys, using hs38d1
+REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) --add_chr_prefix --fasta_regions --regions_regex 'chr[M,EBV]' 'chr.*decoy'"
+FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+
 if [ $INCLUDE_1KG == 1 ]
 then
-	 REGIONS=" --add_chr_prefix --fasta_regions --ignore_regions_keywords _alt HLA-"
 	 # Pass in a mix of our HGSVC and 1KG vcfs
 	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,${S3VCF}; done)"
-	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 	 OUT_NAME="HGSVC_1KG"
 	 CONTROLS="--min_af 0.01"
 else
-	 REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done)"
+	 # just the HGSVC SVs
 	 VCFS="${S3VCF}"
-	 FASTA="http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
-	 OUT_NAME="HGSVC.chroms"
+	 OUT_NAME="HGSVC"
 	 CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514 --pangenome"
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS} --out_name ${OUT_NAME} --flat_alts --all_index --gbwt_prune ${CONTROLS} --normalize ${REGIONS} --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts --all_index --gbwt_prune ${CONTROLS} --normalize ${REGIONS} --merge_graphs --keep_vcfs --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
