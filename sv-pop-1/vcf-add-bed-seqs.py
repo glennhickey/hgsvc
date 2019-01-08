@@ -11,7 +11,7 @@ This is a quick (entire BED in memory) and dirty (don't even use pyvcf as it can
 
 
 import argparse, sys, os, os.path, random, subprocess, shutil, itertools, math
-import vcf, collections, gzip
+import vcf, collections, gzip, re
 
 
 def parse_args(args):
@@ -36,6 +36,12 @@ def bed_header(line):
     """
     assert line.strip().startswith('#')
     return dict([(col_name, col_number) for col_number, col_name in enumerate(line.strip()[1:].split('\t'))])
+
+def strip_sv_tags(info):
+    """ remove all the SV tags
+    """
+    res = ['SVTYPE=(DEL|INS|INV)', 'SVLEN=-{0,1}[0-9]+', 'SVSPAN=-{0,1}[0-9]+']
+    return re.sub('|'.join([r + ';' for r in res] + [';' + r for r in res]), '', info)
 
 def open_input(file_path):
     open_fn = gzip.open if file_path.endswith('.gz') else open
@@ -78,20 +84,28 @@ def main(args):
                 vcf_sv_type = vcf_toks[4][1:-1]                
                 assert vcf_sv_type == bed_toks[header_map['SVTYPE']]
 
+                bed_sv_len = int(bed_toks[header_map['SVLEN']])
+                bed_seq = bed_toks[header_map['SEQ']].upper()
+                
+                # remove SV info tags which will only confuse vg construct -S
+                vcf_toks[7] = strip_sv_tags(vcf_toks[7])
+                
                 # make our SV variant
                 if vcf_sv_type == 'DEL':
                     vcf_toks[4] = vcf_toks[3]
-                    vcf_toks[3] = bed_toks[header_map['SEQ']]
+                    vcf_toks[3] = bed_seq
                 elif vcf_sv_type == 'INS':
-                    vcf_toks[4] = vcf_toks[3] + bed_toks[header_map['SEQ']]
-                elif vcf_sv_type == 'INV':
+                    vcf_toks[4] = vcf_toks[3] + bed_seq
+                elif vcf_sv_type == 'INV':                    
                     if options.inv == 'msnp':
-                        ref_seq = faidx.fetch(vcf_chrom, vcf_pos - 1, vcf_pos - 1 + int(bed_toks[header_map['SVLEN']]))
+                        ref_seq = faidx.fetch(vcf_chrom, vcf_pos - 1, vcf_pos - 1 + bed_sv_len)
                         # assume we wanna keep things in hg38 (as opposed to hs38d1 that we're reading from)
                         ref_seq = ref_seq.replace('Y', 'N').replace('U', 'N')
                         assert ref_seq[0].upper() == vcf_toks[3].upper()
                         vcf_toks[3] = ref_seq
                         vcf_toks[4] = str(Seq(ref_seq).reverse_complement())
+                    elif options.inv == 'leave':
+                        vcf_toks[7] += ';SVTYPE=INV;SVSPAN={}'.format(bed_sv_len)
                 else:
                     assert False
 
