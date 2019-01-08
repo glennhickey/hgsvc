@@ -1,11 +1,17 @@
 #!/usr/bin/env python2.7
 
 """
-Add fully specified SV sequences from a BED file into a VCF.  Input pairs expected to look like these files
+This is a quick (entire BED in memory) and dirty (don't even use pyvcf as it can't parse the above VCF) approach to get the SV's into vg construct.  
+
+Convert VCF/BED pairs such as:
+
 http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/hgsv_sv_discovery/working/20181025_EEE_SV-Pop_1/VariantCalls_EEE_SV-Pop_1/EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz
 http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/hgsv_sv_discovery/working/20181025_EEE_SV-Pop_1/VariantCalls_EEE_SV-Pop_1/EEE_SV-Pop_1.ALL.sites.20181204.bed.gz
 
-This is a quick (entire BED in memory) and dirty (don't even use pyvcf as it can't parse the above VCF) approach to get the SV's into vg construct.  
+Into a VCF that can be read by vg construct -fS.
+
+Insertions and deletions will be fully embedded in the VCF.  By default, inversions will be left as <INV>, as they seem supported
+by vg construct -fS.  They can be left out by --inv drop or explicitly written as multibase snps with --inv msnp.  
 
 """
 
@@ -23,8 +29,8 @@ def parse_args(args):
     parser.add_argument("bed", type=str,
                         help="bed file to look sequences up in (by ID)")
     parser.add_argument("--inv", default="leave",
-                        choices=["leave", "filter-out", "msnp"],
-                        help="leave: leave inversions as they are.  filter-out: remove them. "
+                        choices=["leave", "drop", "msnp"],
+                        help="leave: leave inversions as they are.  drop: remove them. "
                         "msnp: explicitly write as multibase snps")
                         
     args = args[1:]
@@ -110,7 +116,7 @@ def main(args):
                     assert False
 
                 # write to stdout 
-                if vcf_sv_type != 'INV' or options.inv != 'filter-out':
+                if vcf_sv_type != 'INV' or options.inv != 'drop':
                     sys.stdout.write('\t'.join(vcf_toks))
 
 if __name__ == "__main__" :
