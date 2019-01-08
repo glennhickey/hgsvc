@@ -13,6 +13,7 @@ This is a quick (entire BED in memory) and dirty (don't even use pyvcf as it can
 import argparse, sys, os, os.path, random, subprocess, shutil, itertools, math
 import vcf, collections, gzip
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser(description=__doc__, 
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -21,13 +22,14 @@ def parse_args(args):
                         help="VCF whose SV sequences we want to fill out")
     parser.add_argument("bed", type=str,
                         help="bed file to look sequences up in (by ID)")
-    parser.add_argument("--no-inv", action="store_true",
-                        help="Ignore inversions")
+    parser.add_argument("--inv", default="leave",
+                        choices=["leave", "filter-out", "msnp"],
+                        help="leave: leave inversions as they are.  filter-out: remove them. "
+                        "msnp: explicitly write as multibase snps")
                         
     args = args[1:]
     options = parser.parse_args(args)
     return options
-
 
 def bed_header(line):
     """ dict mapping column title to column number
@@ -42,6 +44,10 @@ def open_input(file_path):
 def main(args):
     options = parse_args(args)
 
+    if options.inv == 'msnp':
+        import pysam
+        from Bio.Seq import Seq
+
     # read the bed into memory
     bed_map = {}
     with open_input(options.bed) as bed_file:
@@ -50,6 +56,11 @@ def main(args):
             toks = line.strip().split('\t')
             if toks and not toks[0].startswith('#'):
                 bed_map[toks[header_map['ID']]] = toks
+
+    # fasta index needed for inversions:
+    if options.inv == 'msnp':
+        faidx = pysam.FastaFile('ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/'
+                                'GRCh38_full_analysis_set_plus_decoy_hla.fa')
 
     # print the edited vcf
     with open_input(options.vcf) as vcf_file:
@@ -62,20 +73,30 @@ def main(args):
                 # make sure everything matches up beteween the two files
                 vcf_chrom = vcf_toks[0]
                 assert vcf_chrom == bed_toks[header_map['CHROM']]
-                vcf_pos = vcf_toks[1]
-                assert int(vcf_pos) - 1 == int(bed_toks[header_map['POS']])
+                vcf_pos = int(vcf_toks[1])
+                assert vcf_pos - 1 == int(bed_toks[header_map['POS']])
                 vcf_sv_type = vcf_toks[4][1:-1]                
                 assert vcf_sv_type == bed_toks[header_map['SVTYPE']]
 
+                # make our SV variant
                 if vcf_sv_type == 'DEL':
                     vcf_toks[4] = vcf_toks[3]
                     vcf_toks[3] = bed_toks[header_map['SEQ']]
-                elif vcf_sv_type in ['INS', 'INV']:
-                    vcf_toks[4] = bed_toks[header_map['SEQ']]
+                elif vcf_sv_type == 'INS':
+                    vcf_toks[4] = vcf_toks[3] + bed_toks[header_map['SEQ']]
+                elif vcf_sv_type == 'INV':
+                    if options.inv == 'msnp':
+                        ref_seq = faidx.fetch(vcf_chrom, vcf_pos - 1, vcf_pos - 1 + int(bed_toks[header_map['SVLEN']]))
+                        # assume we wanna keep things in hg38 (as opposed to hs38d1 that we're reading from)
+                        ref_seq = ref_seq.replace('Y', 'N').replace('U', 'N')
+                        assert ref_seq[0].upper() == vcf_toks[3].upper()
+                        vcf_toks[3] = ref_seq
+                        vcf_toks[4] = str(Seq(ref_seq).reverse_complement())
                 else:
                     assert False
 
-                if vcf_sv_type != 'INV' or not options.no_inv:
+                # write to stdout 
+                if vcf_sv_type != 'INV' or options.inv != 'filter-out':
                     sys.stdout.write('\t'.join(vcf_toks))
 
 if __name__ == "__main__" :
