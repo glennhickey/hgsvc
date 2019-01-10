@@ -69,16 +69,21 @@ def main(args):
             if toks and not toks[0].startswith('#'):
                 bed_map[toks[header_map['ID']]] = toks
 
-    # fasta index needed for inversions:
+    # fasta index needed for explicit inversions:
     if options.inv == 'msnp':
         faidx = pysam.FastaFile('ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/'
                                 'GRCh38_full_analysis_set_plus_decoy_hla.fa')
 
     # print the edited vcf
     with open_input(options.vcf) as vcf_file:
+        add_span_info = True
         for line in vcf_file:
             if line.startswith('#'):
                 sys.stdout.write(line)
+                if line.startswith("##INFO") and add_span_info:
+                    # May just be me, but seems vg construct -S wants SVSPAN to do <INV>s
+                    sys.stdout.write('##INFO=<ID=SVSPAN,Number=1,Type=Integer,Description="Size of Inversion">\n')
+                    add_span_info = False
             elif line:
                 vcf_toks = line.split('\t')
                 bed_toks = bed_map[vcf_toks[2]]
