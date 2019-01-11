@@ -78,6 +78,8 @@ def main(args):
     with open_input(options.vcf) as vcf_file:
         add_span_info = True
         for line in vcf_file:
+            # want something that works with bcftools view --min-af
+            line = line.replace('MERGE_AF', 'AF').replace('MERGE_AC', 'AC')
             if line.startswith('#'):
                 sys.stdout.write(line)
                 if line.startswith("##INFO") and add_span_info:

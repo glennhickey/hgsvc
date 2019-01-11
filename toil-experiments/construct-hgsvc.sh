@@ -10,6 +10,8 @@ HEAD_NODE_OPTS=""
 INCLUDE_1KG=0
 SVPOP=0
 INVERSIONS=0
+MIN_AF=0
+FORCE_OUTSTORE=0
 
 usage() {
     # Print usage to stderr
@@ -19,17 +21,19 @@ usage() {
 	 printf "   JOBSTORE-NAME: Name of Toil S3 Jobstore (without any prefix). EX: my-job-store \n"
 	 printf "   OUTSTORE-NAME: Name of output bucket (without prefix or trailing slash). EX my-bucket/hgsvc\n"
 	 printf "Options:\n"
-	 printf "   -b BID  Spot bid in dollars for i3.8xlarge nodes [${BID}]\n"
-	 printf "   -r      Resume existing job\n"
-	 printf "   -g      Aws region [${REGION}]\n"
-	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
-	 printf "   -k      include thousand genomes VCFs"
-	 printf "   -p      use sv-pop instead of HGSVC vcf"
-	 printf "   -i      include inversions from sv-pop vcf"
+	 printf "   -b BID     Spot bid in dollars for i3.8xlarge nodes [${BID}]\n"
+	 printf "   -r         Resume existing job\n"
+	 printf "   -g REGION  Aws region [${REGION}]\n"
+	 printf "   -c NAME    Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
+	 printf "   -k         include thousand genomes VCFs\n"
+	 printf "   -p         use sv-pop instead of HGSVC vcf\n"
+	 printf "   -i         include inversions from sv-pop vcf\n"
+	 printf "   -a AF      min af threshold\n"
+	 printf "   -f         run with --force_outstore to preserve all intermediate files\n"
     exit 1
 }
 
-while getopts "b:re:c:kpi" o; do
+while getopts "b:re:c:kpia:f" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -51,6 +55,12 @@ while getopts "b:re:c:kpi" o; do
 				;;
 		  i)
 				INVERSIONS=1
+				;;
+		  a)
+				MIN_AF=${OPTARG}
+				;;
+		  f)
+				FORCE_OUTSTORE=1
 				;;
         *)
             usage
@@ -92,7 +102,9 @@ else
 	 else
 		  INV_OPTS="--inv leave"
 	 fi
-	 ./vcf-add-bed-seqs.py ${INV_OPTS} EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz EEE_SV-Pop_1.ALL.sites.20181204.bed.gz | bgzip > sv-pop.vcf.gz
+	 # fixes up some basic info tags like AC and AF
+	 vcffixup EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz | bgzip > EEE_SV-Pop_1.ALL.sites.20181204.fix.vcf.gz
+	 ./vcf-add-bed-seqs.py ${INV_OPTS} EEE_SV-Pop_1.ALL.sites.20181204.fix.vcf.gz EEE_SV-Pop_1.ALL.sites.20181204.bed.gz | bgzip > sv-pop.vcf.gz
 	 tabix -f -p vcf sv-pop.vcf.gz
 	 popd
 	 VCF=../sv-pop-1/sv-pop.vcf.gz
@@ -144,5 +156,17 @@ else
 	 INDEX_OPTS="--xg_index --gcsa_index --id_ranges_index --snarls_index --handle_svs"
 fi
 
+if [ $MIN_AF != 0 ]
+then
+	 INDEX_OPTS="${INDEX_OPTS} --pre_min_af ${MIN_AF}"
+fi
+
+if [ $FORCE_OUTSTORE == 1 ]
+then
+	 INDEX_OPTS="${INDEX_OPTS} --force_outstore"
+fi
+
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
+
+aws s3 cp construct.${OUT_NAME}.stdout s3://${OUTSTORE_NAME}/
