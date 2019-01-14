@@ -12,6 +12,7 @@ SVPOP=0
 INVERSIONS=0
 MIN_AF=0
 FORCE_OUTSTORE=0
+NO_UNFOLD=0
 
 usage() {
     # Print usage to stderr
@@ -30,10 +31,11 @@ usage() {
 	 printf "   -i         include inversions from sv-pop vcf\n"
 	 printf "   -a AF      min af threshold\n"
 	 printf "   -f         run with --force_outstore to preserve all intermediate files\n"
+	 printf "   -n         no unfolding for gcsa prunding"
     exit 1
 }
 
-while getopts "b:re:c:kpia:f" o; do
+while getopts "b:re:c:kpia:fn" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -61,6 +63,9 @@ while getopts "b:re:c:kpia:f" o; do
 				;;
 		  f)
 				FORCE_OUTSTORE=1
+				;;
+		  n)
+				NO_UNFOLD=1
 				;;
         *)
             usage
@@ -103,7 +108,7 @@ else
 		  INV_OPTS="--inv leave"
 	 fi
 	 # fixes up some basic info tags like AC and AF
-	 vcffixup EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz | bgzip > EEE_SV-Pop_1.ALL.sites.20181204.fix.vcf.gz
+	 vcfkeepinfo EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz SVTYPE | vcffixup - | bgzip > EEE_SV-Pop_1.ALL.sites.20181204.fix.vcf.gz
 	 ./vcf-add-bed-seqs.py ${INV_OPTS} EEE_SV-Pop_1.ALL.sites.20181204.fix.vcf.gz EEE_SV-Pop_1.ALL.sites.20181204.bed.gz | bgzip > sv-pop.vcf.gz
 	 tabix -f -p vcf sv-pop.vcf.gz
 	 popd
@@ -127,10 +132,8 @@ else
 	 RESTART_FLAG="--restart"
 fi
 
-REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M); do echo chr${i}; done) --add_chr_prefix"
-FASTA="ftp://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
-# note hgsvc deltions only work with hg38 (not hs38d1) becuase of Y/N mismatch on chr10
-#FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M; echo EBV); do echo chr${i}; done) --fasta_regions --regions_regex 'chr.*decoy' --add_chr_prefix --mask_ambiguous"
+FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 
 CONTROLS="--pangenome"
 
@@ -151,7 +154,13 @@ fi
 
 if [ $SVPOP == 0 ]
 then
-	 INDEX_OPTS="--all_index --gbwt_prune"
+	 INDEX_OPTS="--all_index"
+	 if [ $NO_UNFOLD == 0 ]
+	 then
+		  INDEX_OPTS="${INDEX_OPTS} --gbwt_prune"
+	 else
+		  OUT_NAME="${OUT_NAME}-no-unfold"
+	 fi
 else
 	 INDEX_OPTS="--xg_index --gcsa_index --id_ranges_index --snarls_index --handle_svs"
 fi

@@ -81,6 +81,9 @@ def main(args):
             # want something that works with bcftools view --min-af
             line = line.replace('MERGE_AF', 'AF').replace('MERGE_AC', 'AC')
             if line.startswith('#'):
+                # So we can merge into 1000 Genomes VCF
+                line = line.replace('##FORMAT=<ID=GT,Number=1,Type=Integer,Description="Genotype">',
+                                    '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
                 sys.stdout.write(line)
                 if line.startswith("##INFO") and add_span_info:
                     # May just be me, but seems vg construct -S wants SVSPAN to do <INV>s
