@@ -88,6 +88,7 @@ def main(args):
                 if line.startswith("##INFO") and add_span_info:
                     # May just be me, but seems vg construct -S wants SVSPAN to do <INV>s
                     sys.stdout.write('##INFO=<ID=SVSPAN,Number=1,Type=Integer,Description="Size of Inversion">\n')
+                    sys.stdout.write('##INFO=<ID=END,Number=1,Type=Integer,Description="End of Inversion">\n')
                     add_span_info = False
             elif line:
                 vcf_toks = line.split('\t')
@@ -121,7 +122,7 @@ def main(args):
                         vcf_toks[3] = ref_seq
                         vcf_toks[4] = str(Seq(ref_seq).reverse_complement())
                     elif options.inv == 'leave':
-                        vcf_toks[7] += ';SVTYPE=INV;SVSPAN={}'.format(bed_sv_len)
+                        vcf_toks[7] += ';SVTYPE=INV;SVSPAN={};END={}'.format(bed_sv_len, vcf_pos + bed_sv_len)
                 else:
                     assert False
 
