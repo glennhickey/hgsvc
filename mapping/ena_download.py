@@ -12,7 +12,7 @@ with open("ena_reads.tsv") as urls_file:
             file_map[toks[0]] = toks[3:]
 
 procs = []
-for name, urls in file_map.items()[:1]:
+for name, urls in file_map.items():
     try:
         os.makedirs(name)
     except:
