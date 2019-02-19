@@ -1,0 +1,30 @@
+AFR_BantuSETswana_HGDP01030_M	HGDP01030	https://www.ebi.ac.uk/ena/data/view/ERR1347732	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/002/ERR1347732/ERR1347732_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/002/ERR1347732/ERR1347732_2.fastq.gz
+AFR_Dinka_DNK11_M	DNK11	https://www.ebi.ac.uk/ena/data/view/ERR1347694
+AFR_EsanESN_HG02943_F	HG02943	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_B10
+AFR_GambiaGWD_HG02574_F	HG02574	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_H10 ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/007/ERR1347677/ERR1347677_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/007/ERR1347677/ERR1347677_2.fastq.gz
+AFR_KhomaniSan_SA0722_F	SA0722	https://www.ebi.ac.uk/ena/data/search?query=LP6005592-DNA_C05
+AFR_Mbuti_HGDP00449_M	HGDP00449	https://www.ebi.ac.uk/ena/data/view/ERR1019078
+AFR_San_HGDP00987_M	HGDP00987	https://www.ebi.ac.uk/ena/data/view/ERR1019075	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR101/005/ERR1019075/ERR1019075_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR101/005/ERR1019075/ERR1019075_2.fastq.gz
+AFR_Yoruba_HGDP00928_F	HGDP00928	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_B02
+AMR_Karitiana_HGDP01012_M	HGDP01012	https://www.ebi.ac.uk/ena/data/view/ERR1025635
+AMR_Maya_HGDP00857_F	HGDP00857	https://www.ebi.ac.uk/ena/data/search?query=LP6005441-DNA_H07	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/003/ERR1025643/ERR1025643_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/003/ERR1025643/ERR1025643_2.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR141/005/ERR1419165/ERR1419165_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR141/005/ERR1419165/ERR1419165_2.fastq.gz
+AMR_Mixtec_Mixa0099_M	Mixa0099	https://www.ebi.ac.uk/ena/data/view/ERR1347738
+AMR_Pima_HGDP01044_F	HGDP01044	https://www.ebi.ac.uk/ena/data/search?query=LP6005441-DNA_F10
+EA_Ami_NA13607_M	NA13607	https://www.ebi.ac.uk/ena/data/view/ERR1025610	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/000/ERR1025610/ERR1025610_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/000/ERR1025610/ERR1025610_2.fastq.gz
+EA_Han_HGDP00785_M	HGDP00785	https://www.ebi.ac.uk/ena/data/view/ERR1019056
+EA_Thai_CHI_034_F	CHI	https://www.ebi.ac.uk/ena/data/search?query=LP6005443-DNA_B07
+OCN_AustraliaECCAC_IHW9118_F	IHW9118	https://www.ebi.ac.uk/ena/data/search?query=SS6004478	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR139/001/ERR1395601/ERR1395601_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR139/001/ERR1395601/ERR1395601_2.fastq.gz
+OCN_Hawaiian_NA17385_M	NA17385	https://www.ebi.ac.uk/ena/data/view/ERR1395580
+OCN_Papuan_HGDP00551_M	HGDP00551	https://www.ebi.ac.uk/ena/data/view/ERR1347728
+OCN_Papuan_HGDP00552_F	HGDP00552	https://www.ebi.ac.uk/ena/data/search?query=LP6005443-DNA_D08	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/001/ERR1347711/ERR1347711_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/001/ERR1347711/ERR1347711_2.fastq.gz
+SA_BengaliBEB_HG03007_F	HG03007	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_H09
+SA_Kusunda_K_2_M	K	https://www.ebi.ac.uk/ena/data/view/ERR1347703
+SA_PunjabiPJL_HG02724_M	HG02724	https://www.ebi.ac.uk/ena/data/search?query=LP6005592-DNA_B04	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR139/008/ERR1395568/ERR1395568_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR139/008/ERR1395568/ERR1395568_2.fastq.gz
+SA_PunjabiPJL_HG02790_F	HG02790	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_B12
+SIB_EskimoChaplino_Esk29_M	Esk29	https://www.ebi.ac.uk/ena/data/view/ERR1347706
+SIB_EskimoNaukan_Nesk25_F	Nesk25	https://www.ebi.ac.uk/ena/data/search?query=LP6005443-DNA_G03	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/003/ERR1347733/ERR1347733_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR134/003/ERR1347733/ERR1347733_2.fastq.gz
+SIB_Yakut_HGDP00956_F	HGDP00956	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_F01
+WEA_EnglandGBR_HG00128_F	HG00128	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_F10
+WEA_Hungarian_NA15203_F	NA15203	https://www.ebi.ac.uk/ena/data/search?query=LP6005442-DNA_B08	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/009/ERR1025629/ERR1025629_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR102/009/ERR1025629/ERR1025629_2.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR141/002/ERR1419182/ERR1419182_1.fastq.gz	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR141/002/ERR1419182/ERR1419182_2.fastq.gz
+WEA_Palestinian_HGDP00737_F	HGDP00737	https://www.ebi.ac.uk/ena/data/search?query=LP6005441-DNA_H09
+WEA_Sardinian_HGDP01078_F	HGDP01078	https://www.ebi.ac.uk/ena/data/search?query=LP6005441-DNA_D11
