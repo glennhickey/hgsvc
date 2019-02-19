@@ -7,6 +7,9 @@ BID=0.78
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
+PATH_OPTS=""
+OUT_NAME="sim-HG00514-30x"
+NUM_READS="256000000"
 
 usage() {
     # Print usage to stderr
@@ -23,10 +26,12 @@ usage() {
 	 printf "   -r      Resume existing job\n"
 	 printf "   -g      Aws region [${REGION}]\n"
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
+	 printf "   -p PATH Simulate from this path\n"
+	 printf "   -n N    Simulate N reads\n"
     exit 1
 }
 
-while getopts "b:re:c:" o; do
+while getopts "b:re:c:p:n:" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -39,6 +44,13 @@ while getopts "b:re:c:" o; do
 				;;
 		  c)
 				HEAD_NODE_OPTS="-l ${OPTARG}"
+				;;
+		  p)
+				PATH_OPTS="--path ${OPTARG}"
+				OUT_NAME="${OUT_NAME}-${OPTARG}"
+				;;
+		  n)
+				NUM_READS=${OPTARG}
 				;;
         *)
             usage
@@ -78,8 +90,9 @@ else
 	 RESTART_FLAG="--restart"
 fi
 
-CMD="sim aws:${REGION}:${JOBSTORE_NAME} ${XG0_PATH} ${XG1_PATH} 256000000  aws:${REGION}:${OUTSTORE_NAME} --out_name sim-HG00514-30x --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 20 --seed 23 --validate --whole_genome_config --logFile simulate.hgsvc.log ${RESTART_FLAG}"
+CMD="sim aws:${REGION}:${JOBSTORE_NAME} ${XG0_PATH} ${XG1_PATH} ${NUM_READS} aws:${REGION}:${OUTSTORE_NAME} --out_name ${OUT_NAME} --gam --fastq_out --fastq  ${TEMPLATE_PATH} --sim_opts \"-p 570 -v 165 -i 0.002 -I\" --sim_chunks 20 --seed 23 --validate --whole_genome_config --logFile simulate.hgsvc.log ${RESTART_FLAG} ${PATH_OPTS}"
 
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "${CMD}" | tee sim.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
 
+aws s3 cp sim.hgsvc.$(basename ${OUTSTORE_NAME}).stdout s3://${OUTSTORE_NAME}/

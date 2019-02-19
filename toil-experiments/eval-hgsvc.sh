@@ -87,18 +87,20 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
+SVEVAL_OPTS="--sveval --min_sv_len 50"
+
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} --sveval"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} --sveval --vcfeval_bed_regions ${REGIONS_BED}"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED}"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} --sveval --normalize --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --normalize --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} --sveval --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
 
 if [ $DOWNLOAD == 1 ]

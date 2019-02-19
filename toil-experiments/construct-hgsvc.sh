@@ -7,12 +7,18 @@ BID=0.83
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
+HEAD_NODE=""
 INCLUDE_1KG=0
-SVPOP=0
+GRAPH="HGSVC"
 INVERSIONS=0
 MIN_AF=0
 FORCE_OUTSTORE=0
 NO_UNFOLD=0
+CONFIG_PATH=""
+#ALT_REGIONS="--alt_regions https://raw.githubusercontent.com/glennhickey/toil-vg/construct/data/grch38-alt-positions.bed"
+#ALT_REGIONS="--alt_regions s3://glennhickey/grch38/grch38-alt-positions-no-hla.bed"
+ALT_REGIONS=""
+NODECOY=0
 
 usage() {
     # Print usage to stderr
@@ -28,14 +34,18 @@ usage() {
 	 printf "   -c NAME    Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
 	 printf "   -k         include thousand genomes VCFs\n"
 	 printf "   -p         use sv-pop instead of HGSVC vcf\n"
-	 printf "   -i         include inversions from sv-pop vcf\n"
+	 printf "   -s         use pseudo-diploid instead of HGSVC vcf\n"
+	 printf "   -i         include inversions in vcf\n"
 	 printf "   -a AF      min af threshold\n"
 	 printf "   -f         run with --force_outstore to preserve all intermediate files\n"
-	 printf "   -n         no unfolding for gcsa prunding"
+	 printf "   -n         no unfolding for gcsa prunding\n"
+	 printf "   -l BED     alt regions\n"
+	 printf "   -o         (local) Path of config file\n"
+	 printf "   -D         Dont include HS38d1 decoy sequences\n"
     exit 1
 }
 
-while getopts "b:re:c:kpia:fn" o; do
+while getopts "b:re:c:kpsia:fnl:o:D" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -47,13 +57,17 @@ while getopts "b:re:c:kpia:fn" o; do
 				REGION=${OPTARG}
 				;;
 		  c)
+				HEAD_NODE=${OPTARG}
 				HEAD_NODE_OPTS="-l ${OPTARG}"
 				;;
 		  k)
 				INCLUDE_1KG=1
 				;;
 		  p)
-				SVPOP=1
+				GRAPH="SVPOP"
+				;;
+		  s)
+				GRAPH="CHMPD"
 				;;
 		  i)
 				INVERSIONS=1
@@ -66,6 +80,15 @@ while getopts "b:re:c:kpia:fn" o; do
 				;;
 		  n)
 				NO_UNFOLD=1
+				;;
+		  l)
+				ALT_REGIONS="--alt_regions_bed ${OPTARG}"
+				;;
+		  o)
+				CONFIG_PATH=${OPTARG}
+				;;
+		  D)
+				NODECOY=1
 				;;
         *)
             usage
@@ -91,14 +114,22 @@ wget -nc https://raw.githubusercontent.com/vgteam/toil-vg/master/scripts/ec2-run
 chmod 777 ec2-run.sh
 
 # make our vcf
-if [ $SVPOP == 0 ]
+if [ $GRAPH == "HGSVC" ]
 then
-	 pushd ../haps
-	 ./make-vcf.sh
-	 popd
-	 VCF=../haps/HGSVC.haps.vcf.gz
-	 NAME=HGSVC
-else
+	 pushd ../haps		  
+	 if [ $INVERSIONS == 0 ]
+	 then
+		  ./make-vcf.sh
+		  popd
+		  VCF=../haps/HGSVC.haps.vcf.gz
+	 else
+		  ./make-inv-vcf.sh
+		  popd
+		  VCF=../haps/HGSVC.haps.inv.vcf.gz
+	 fi
+	 NAME=HGSVC	  
+elif [ $GRAPH == "SVPOP" ]
+then
 	 pushd ../sv-pop-1
 	 ./download.sh
 	 if [ $INVERSIONS == 0 ]
@@ -114,6 +145,14 @@ else
 	 popd
 	 VCF=../sv-pop-1/sv-pop.vcf.gz
 	 NAME=SVPOP
+else
+	 pushd ../pseudo
+	 ./download.sh
+	 ./add-genotypes.py pseudo_diploid.vcf.gz reduced.tab | bgzip > pseudo_diploid_gt.vcf.gz
+	 tabix -f -p vcf pseudo_diploid_gt.vcf.gz
+	 popd
+	 VCF=../pseudo/pseudo_diploid_gt.vcf.gz
+	 NAME=CHMPD
 fi
 
 # Get our vcf on S3 in our outstore
@@ -132,7 +171,25 @@ else
 	 RESTART_FLAG="--restart"
 fi
 
-REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M; echo EBV); do echo chr${i}; done) --fasta_regions --regions_regex 'chr.*decoy' --add_chr_prefix --mask_ambiguous"
+if [ -z ${CONFIG_PATH} ]
+then
+	 CONFIG_OPTS="--whole_genome_config"
+else
+	 # pass a local config to our job by way of the S3 outstore
+	 CONF_NAME=`basename $CONFIG_PATH`
+	 aws s3 cp $CONFIG_PATH s3://${OUTSTORE_NAME}/${CONF_NAME}
+	 toil ssh-cluster --insecure --logOff --zone=us-west-2a ${CLUSTER_NAME} ${HEAD_NODE} /venv/bin/aws s3 cp s3://${OUTSTORE_NAME}/${CONF_NAME} .
+	 CONFIG_OPTS="--config $CONF_NAME"
+fi
+
+if [ $NODECOY == 0 ]
+then
+	 REGION_REGEX="--regions_regex \"chr.*_random\" \"chrUn_[a-zA-Z0-9]*\" \"chr.*decoy\""
+else
+	 REGION_REGEX="--regions_regex \"chr.*_random\" \"chrUn_[a-zA-Z0-9]*\""
+fi
+
+REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M; echo EBV); do echo chr${i}; done) --fasta_regions ${ALT_REGIONS} ${REGION_REGEX} --add_chr_prefix --mask_ambiguous"
 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 
 CONTROLS="--pangenome"
@@ -143,26 +200,28 @@ then
 	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/ALL.chr${i}_GRCh38.genotypes.20170504.vcf.gz,${S3VCF}; done)"
 	 OUT_NAME="${NAME}_1KG"
 else
-	 # just the HGSVC SVs
-	 VCFS="${S3VCF}"
+	 # just the HGSVC SVs (we pass in the same vcf for each region so toil-vg doesn't use it for the decoy sequences.
+	 # this shouldn't matter, but the the job-chain can get too big for toil when doing unfold-pruning)
+	 VCFS="$(for i in $(seq 1 22; echo X; echo Y); do echo ${S3VCF}; done)"
 	 OUT_NAME="${NAME}"
-	 if [ $SVPOP == 0 ]
+	 if [ $GRAPH == "HGSVC" ]
 	 then
 		  CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514 --pangenome"
+	 elif  [ $GRAPH == "CHMPD" ]
+	 then
+		  CONTROLS="--pos_control PSEUDOSET --haplo_sample PSEUDOSET --neg_control PSEUDOSET --pangenome"
 	 fi
 fi
 
-if [ $SVPOP == 0 ]
+if [ $GRAPH != "SVPOP" ]
 then
 	 INDEX_OPTS="--all_index"
 	 if [ $NO_UNFOLD == 0 ]
 	 then
 		  INDEX_OPTS="${INDEX_OPTS} --gbwt_prune"
-	 else
-		  OUT_NAME="${OUT_NAME}-no-unfold"
 	 fi
 else
-	 INDEX_OPTS="--xg_index --gcsa_index --id_ranges_index --snarls_index --handle_svs"
+	 INDEX_OPTS="--xg_index --gcsa_index --id_ranges_index --snarls_index"
 fi
 
 if [ $MIN_AF != 0 ]
@@ -176,6 +235,6 @@ then
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --whole_genome_config --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee construct.${OUT_NAME}.stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --validate --handle_svs ${CONFIG_OPTS} --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee "construct.${OUT_NAME}-$(date).stdout"
 
-aws s3 cp construct.${OUT_NAME}.stdout s3://${OUTSTORE_NAME}/
+aws s3 cp construct.${OUT_NAME}-$(date).stdout s3://${OUTSTORE_NAME}/

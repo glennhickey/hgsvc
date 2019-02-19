@@ -45,11 +45,13 @@ export FQ2=
 #  filter-opts: []
 #  augment-opts: ['-M']
 #  recall-opts: ['-u', '-n', '0', '-T']
+#  chunk_context: [2000]
 #
 #call_conf.yaml has:
 #  filter-opts: []
 #  augment-opts: []
 #  recall-opts: ['-u', '-n', '0']
+#  chunk_context: [2000]
 
 ./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf_truth.yaml ${JOBSTORE}1 ${OUTSTORE}/call-sim-HG00514-truth s3://${OUTSTORE}/HGSVC.chroms_HG00514_haplo.xg HG00514 s3://${OUTSTORE}/sim/sim-HG00514-30x.gam
 
@@ -77,15 +79,99 @@ export FQ2=
 
 ```
 # Construct graph and index for HGSVC+1KG variatns.  Haploid vcfs from ../haps/haps.urls must have been downloaded into ../haps
-./construct-hgsvc.sh -k -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}
+./construct-hgsvc.sh -k -n -a 0.01 -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14
 
 # Map real reads against the HGSVC+1KG graph
-./map-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/map-1kg-HG00514 s3://${OUTSTORE}/HGSVC_1KG_minaf_0.01 HG00514-ERR903030-map-1kg ${FQ1} ${FQ2}
+./map-hgsvc.sh -c ${CLUSTER}1 ${JOBSTORE}1  ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/map-HG00514 s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/HGSVC_1KG-no-unfold  HG00514-ERR903030-map $FQ1 $FQ2
 
 # Call a VCF for each GAM
-./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/call-1kg-HG00514 s3://${OUTSTORE}/HGSVC_1KG_minaf_0.01.xg HG00514 s3://${OUTSTORE}/map-1kg-HG00514/HG00514-ERR903030-map-1kg
+./call-hgsvc.sh -c ${CLUSTER}1 -f ./call_conf.yaml ${JOBSTORE}1 ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/call-HG00514 s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/HGSVC_1KG-no-unfold.xg HG00514 s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/map-HG00514/HG00514-ERR903030-map_chr
 
 # Do comparisons on called VCFs and download results locally
-./eval-hgsvc.sh -d -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/eval-1kg-HG00514 s3://${OUTSTORE}/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/call-1kg-HG00514/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh -d -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/eval-HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/call-HG00514/HG00514.vcf.gz ${COMPARE_REGIONS_BED}
 
 ```
+
+## SV-pop graph
+```
+# Construct the graph and index for svpop (15 sv samples) including inversions
+./construct-hgsvc.sh -p -i -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/SVPOP-jan10
+
+# Map real reads against the SVPOP graph
+./map-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/SVPOP-jan10/map-HG00514 s3://${OUTSTORE}/SVPOP-jan10/SVPOP  HG00514-ERR903030-map $FQ1 $FQ2
+
+# Call
+./call-hgsvc.sh -c ${CLUSTER}2 -f ./call_conf.yaml ${JOBSTORE}2 ${OUTSTORE}/SVPOP-jan10/call-HG00514 s3://${OUTSTORE}/SVPOP-jan10/SVPOP.xg HG00514 s3://${OUTSTORE}/SVPOP-jan10/map-HG00514/H G00514-ERR903030-map_chr
+
+```
+
+## SV-pop graph with 1kg
+```
+# Construct the graph and index for svpop (15 sv samples) including inversions and 1kg variants
+./construct-hgsvc.sh -a 0.01 -k -p -i -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/SVPOP-1KG-AF01-JAN15
+
+# Map real reads against the SVPOP+1KG graph
+./map-hgsvc.sh -c ${CLUSTER}3 ${JOBSTORE}3  ${OUTSTORE}/SVPOP-1KG-AF01-JAN15/map-HG00514 s3://${OUTSTORE}/SVPOP-1KG-AF01-JAN15/SVPOP_1KG  HG00514-ERR903030-map $FQ1 $FQ2
+
+./call-hgsvc.sh -c ${CLUSTER}3 -f ./call_conf.yaml ${JOBSTORE}3 ${OUTSTORE}/SVPOP-1KG-AF01-JAN15/call-HG00514 s3://${OUTSTORE}/SVPOP-1KG-AF01-JAN15/SVPOP_1KG.xg HG00514 s3://${OUTSTORE}/SVPOP-1KG-AF01-JAN15/map-HG00514/HG00514-ERR903030-map_chr
+
+```
+
+### redos (TODO: clean up readme.  use mce everywhere?)
+
+# simulation:
+
+./mce-hgsvc.sh -c ${CLUSTER}1 -C " -f ./call_conf.yaml"   ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
+
+./mce-hgsvc.sh -c ${CLUSTER}2 -C " -f ./call_conf.yaml"   ${JOBSTORE}2 ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14 s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/HGSVC_1KG-no-unfold HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
+
+./mce-hgsvc.sh -c ${CLUSTER}3 -C " -f ./call_conf.yaml"   ${JOBSTORE}3 ${OUTSTORE}/SVPOP-jan10 s3://${OUTSTORE}/SVPOP-jan10/SVPOP HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
+
+./mce-hgsvc.sh -c ${CLUSTER}4 -C " -f ./call_conf.yaml"   ${JOBSTORE}4 ${OUTSTORE}/SVPOP-1KG-AF01-JAN15/ s3://${OUTSTORE}/SVPOP-1KG-AF01-JAN15/SVPOP_1KG HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
+
+
+# real (skip mapping)
+
+./mce-hgsvc.sh -c ${CLUSTER}1 -C " -f ./call_conf.yaml"   ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+./mce-hgsvc.sh -c ${CLUSTER}2 -C " -f ./call_conf.yaml"   ${JOBSTORE}2 ${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14 s3://${OUTSTORE}/HGSVC-1KG-AF01-NO-UNFOLD-JAN14/HGSVC_1KG-no-unfold HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+./mce-hgsvc.sh -c ${CLUSTER}3 -C " -f ./call_conf.yaml"   ${JOBSTORE}3 ${OUTSTORE}/SVPOP-jan10 s3://${OUTSTORE}/SVPOP-jan10/SVPOP HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+./mce-hgsvc.sh -c ${CLUSTER}4 -C " -f ./call_conf.yaml"   ${JOBSTORE}4 ${OUTSTORE}/SVPOP-1KG-AF01-JAN15/ s3://${OUTSTORE}/SVPOP-1KG-AF01-JAN15/SVPOP_1KG HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+# Polaris sample to compare with SVPOP
+
+
+
+# make report
+mkdir results-jan26
+#for name in HGSVC-jan5 HGSVC-1KG-AF01-NO-UNFOLD-JAN14 SVPOP-jan10 SVPOP-1KG-AF01-JAN15
+for name in HGSVC-jan5
+do
+aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514 ./results-jan26/${name}-eval-HG00514
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim ./results-jan26/${name}-eval-HG00514-sim
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-full ./results-jan26/${name}-eval-HG00514-bayestyper
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim-bayestyper-full ./results-jan26/${name}-eval-HG00514-sim-bayestyper
+done
+
+cd results-jan26
+for c in sveval-clip-norm sveval-clip sveval sveval-norm
+do
+rm -f ${c}.tsv ${c}-sim.tsv
+for i in `find . | grep ${c}/sv_accuracy.tsv | grep -v sim`; do echo $i >> ${c}.tsv; cat $i >> ${c}.tsv; done
+for i in `find . | grep ${c}/sv_accuracy.tsv | grep sim`; do echo $i >> ${c}-sim.tsv; cat $i >> ${c}-sim.tsv; done
+done
+
+
+# Bayestyper
+
+./eval-hgsvc.sh  -c ${CLUSTER}1 ${JOBSTORE}1  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
+
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
+
+
+# Try making HGSVC alt graphs
+./construct-hgsvc.sh -l s3://glennhickey/grch38/grch38-alt-positions-no-hla-no-chr6_GL000251v2_alt.bed -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/HGSVC-alts-feb18
+
+./construct-hgsvc.sh -k -n -l s3://glennhickey/grch38/grch38-alt-positions-no-hla-no-chr6_GL000251v2_alt.bed -c ${CLUSTER}3 ${JOBSTORE}3 ${OUTSTORE}/HGSVC-1kg-alts-feb18
