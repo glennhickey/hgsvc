@@ -19,6 +19,7 @@ CONFIG_PATH=""
 #ALT_REGIONS="--alt_regions s3://glennhickey/grch38/grch38-alt-positions-no-hla.bed"
 ALT_REGIONS=""
 NODECOY=0
+HG38=1
 
 usage() {
     # Print usage to stderr
@@ -35,6 +36,8 @@ usage() {
 	 printf "   -k         include thousand genomes VCFs\n"
 	 printf "   -p         use sv-pop instead of HGSVC vcf\n"
 	 printf "   -s         use pseudo-diploid instead of HGSVC vcf\n"
+	 printf "   -G         use giab version 0.5.0 12122017 instead of HGSVC vcf\n"
+	 printf "   -H         use giab version 0.6.0 instead of HGSVC vcf\n"
 	 printf "   -i         include inversions in vcf\n"
 	 printf "   -a AF      min af threshold\n"
 	 printf "   -f         run with --force_outstore to preserve all intermediate files\n"
@@ -45,7 +48,7 @@ usage() {
     exit 1
 }
 
-while getopts "b:re:c:kpsia:fnl:o:D" o; do
+while getopts "b:re:c:kpsia:fnl:o:DGH" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -68,6 +71,14 @@ while getopts "b:re:c:kpsia:fnl:o:D" o; do
 				;;
 		  s)
 				GRAPH="CHMPD"
+				;;
+		  G)
+				GRAPH="GIAB-0.5"
+				HG38=0
+				;;
+		  H)
+				GRAPH="GIAB-0.6"
+				HG38=0
 				;;
 		  i)
 				INVERSIONS=1
@@ -145,7 +156,8 @@ then
 	 popd
 	 VCF=../sv-pop-1/sv-pop.vcf.gz
 	 NAME=SVPOP
-else
+elif [ $GRAPH == "CHMPD" ]
+then
 	 pushd ../pseudo
 	 ./download.sh
 	 ./add-genotypes.py pseudo_diploid.vcf.gz reduced.tab | bgzip > pseudo_diploid_gt.vcf.gz
@@ -153,6 +165,22 @@ else
 	 popd
 	 VCF=../pseudo/pseudo_diploid_gt.vcf.gz
 	 NAME=CHMPD
+elif [ $GRAPH == "GIAB-0.5" ]
+then
+	 pushd ../giab
+	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_UnionSVs_12122017/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz
+	 wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_UnionSVs_12122017/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz.tbi
+	 popd
+	 VCF=../giab/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz
+	 NAME=GIAB
+elif [ $GRAPH == "GIAB-0.6" ]
+then
+	 pushd ../giab
+	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/HG002_SVs_Tier1_v0.6.vcf.gz
+	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/HG002_SVs_Tier1_v0.6.vcf.gz.tbi
+	 popd
+	 VCF=../giab/HG002_SVs_Tier1_v0.6.vcf.gz
+	 NAME=GIAB	 
 fi
 
 # Get our vcf on S3 in our outstore
@@ -189,8 +217,14 @@ else
 	 REGION_REGEX="--regions_regex \"chr.*_random\" \"chrUn_[a-zA-Z0-9]*\""
 fi
 
-REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M; echo EBV); do echo chr${i}; done) --fasta_regions ${ALT_REGIONS} ${REGION_REGEX} --add_chr_prefix --mask_ambiguous"
-FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+if [ $HG38 == 1 ]
+then
+	 REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo M; echo EBV); do echo chr${i}; done) --fasta_regions ${ALT_REGIONS} ${REGION_REGEX} --add_chr_prefix --mask_ambiguous"
+	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+else
+	 REGIONS="--regions $(for i in $(seq 1 22; echo X; echo Y; echo MT); do echo ${i}; done) --fasta_regions --remove_chr_prefix --mask_ambiguous"
+	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz"
+fi	 
 
 CONTROLS="--pangenome"
 
@@ -210,10 +244,13 @@ else
 	 elif  [ $GRAPH == "CHMPD" ]
 	 then
 		  CONTROLS="--pos_control PSEUDOSET --haplo_sample PSEUDOSET --neg_control PSEUDOSET --pangenome"
+	 elif [[ $GRAPH =~ ^GIAB ]]
+	 then
+		  CONTROLS="--pos_control HG002 --pangenome"
 	 fi
 fi
 
-if [ $GRAPH != "SVPOP" ]
+if [ $GRAPH != "SVPOP" ] && [ $GRAPH != "GIAB-0.5" ] && [ $GRAPH != "GIAB-0.6" ]
 then
 	 INDEX_OPTS="--all_index"
 	 if [ $NO_UNFOLD == 0 ]

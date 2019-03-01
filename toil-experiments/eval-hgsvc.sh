@@ -7,27 +7,30 @@ RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
 DOWNLOAD=0
+MIN_LEN=50
 
 usage() {
     # Print usage to stderr
     exec 1>&2
-    printf "Usage: $0 [OPTIONS] <JOBSTORE-NAME> <OUTSTORE-NAME> <TRUTH-VCF> <CALLS-VCF> <REGION-BED>\n"
+    printf "Usage: $0 [OPTIONS] <JOBSTORE-NAME> <OUTSTORE-NAME> <TRUTH-VCF> <CALLS-VCF> <REGION-BED> <SAMPLE>\n"
 	 printf "Arguments:\n"
 	 printf "   JOBSTORE-NAME: Name of Toil S3 Jobstore (without any prefix). EX: my-job-store \n"
 	 printf "   OUTSTORE-NAME: Name of output bucket (without prefix or trailing slash). EX my-bucket/hgsvc\n"
 	 printf "   TRUTH-VCF:     Truth VCF\n"
 	 printf "   CALLS-VCF:     Calls VCF\n"
 	 printf "   REGIONS-BED:   Regions to clip to\n"
+	 printf "   SAMPLE:        Sample name\n"
 	 printf "Options:\n"
 	 printf "   -b BID  Spot bid in dollars for r3.8xlarge nodes [${BID}]\n"
 	 printf "   -r      Resume existing job\n"
 	 printf "   -g      Aws region [${REGION}]\n"
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
 	 printf "   -d      Download results locally\n"
+	 printf "   -m      Minimum length [${MIN_LEN}]\n"
     exit 1
 }
 
-while getopts "b:re:c:d" o; do
+while getopts "b:re:c:dm:" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -44,6 +47,9 @@ while getopts "b:re:c:d" o; do
 		  d)
 				DOWNLOAD=1
 				;;
+		  m)
+				MIN_LEN=${OPTARG}
+				;;
         *)
             usage
             ;;
@@ -52,7 +58,7 @@ done
 
 shift $((OPTIND-1))
 
-if [[ "$#" -lt "5" ]]; then
+if [[ "$#" -lt "6" ]]; then
     # Too few arguments
     usage
 fi
@@ -68,6 +74,7 @@ CALLS_VCF="${1}"
 shift
 REGIONS_BED="${1}"
 shift
+SAMPLE_NAME="${1}"
 
 # assume interleaved if READS2 not given
 if [ -z ${READS2} ]
@@ -87,12 +94,12 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
-SVEVAL_OPTS="--sveval --min_sv_len 50"
+SVEVAL_OPTS="--sveval --min_sv_len $MIN_LEN --vcfeval_sample $SAMPLE_NAME"
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED}"
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED}"
 
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --normalize --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 

@@ -53,6 +53,20 @@ def open_input(file_path):
     open_fn = gzip.open if file_path.endswith('.gz') else open
     return open_fn(file_path, 'r')
 
+def make_diploid(toks):
+    """ phony in diploid genotypes so we can run through bcftools norm.
+    map 0->0/0 and 1->0/1.
+    these make no difference for graph construction, just can't use them as basis for genotype comparison.
+    """
+    gts = toks[9:]
+    dip_gts = []
+    for gt in gts:
+        gt_toks = gt.split(':')
+        assert len(gt_toks[0]) == 1
+        gt_toks[0] = '0/{}'.format(gt_toks[0])
+        dip_gts.append(':'.join(gt_toks))
+    return toks[:9] + dip_gts
+
 def main(args):
     options = parse_args(args)
 
@@ -125,6 +139,9 @@ def main(args):
                         vcf_toks[7] += ';SVTYPE=INV;SVSPAN={};END={}'.format(bed_sv_len, vcf_pos + bed_sv_len)
                 else:
                     assert False
+
+                # convert from haploid to diploid for sake of downstream tools
+                vcf_toks = make_diploid(vcf_toks)
 
                 # write to stdout 
                 if vcf_sv_type != 'INV' or options.inv != 'drop':
