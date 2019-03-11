@@ -53,17 +53,21 @@ def open_input(file_path):
     open_fn = gzip.open if file_path.endswith('.gz') else open
     return open_fn(file_path, 'r')
 
-def make_diploid(toks):
-    """ phony in diploid genotypes so we can run through bcftools norm.
-    map 0->0/0 and 1->0/1.
+def make_diploid(toks, samples, merge_samples):
+    """ phony in diploid genotypes so we can run through bcftools norm.  use the MERGE_SAMPLES column
+    in the bed file to determine present (0/1) or abasent (0/0)
     these make no difference for graph construction, just can't use them as basis for genotype comparison.
     """
     gts = toks[9:]
+    assert len(gts) == len(samples)
     dip_gts = []
-    for gt in gts:
+    for gt,sample in zip(gts,samples):
         gt_toks = gt.split(':')
         assert len(gt_toks[0]) == 1
-        gt_toks[0] = '0/{}'.format(gt_toks[0])
+        if sample in merge_samples:
+            gt_toks[0] = '0/1'
+        else:
+            gt_toks[0] = '0/0'
         dip_gts.append(':'.join(gt_toks))
     return toks[:9] + dip_gts
 
@@ -104,6 +108,8 @@ def main(args):
                     sys.stdout.write('##INFO=<ID=SVSPAN,Number=1,Type=Integer,Description="Size of Inversion">\n')
                     sys.stdout.write('##INFO=<ID=END,Number=1,Type=Integer,Description="End of Inversion">\n')
                     add_span_info = False
+                if line.startswith("#CHROM"):
+                    samples=line.split('\t')[9:]
             elif line:
                 vcf_toks = line.split('\t')
                 bed_toks = bed_map[vcf_toks[2]]
@@ -141,7 +147,7 @@ def main(args):
                     assert False
 
                 # convert from haploid to diploid for sake of downstream tools
-                vcf_toks = make_diploid(vcf_toks)
+                vcf_toks = make_diploid(vcf_toks, samples, bed_toks[header_map['MERGE_SAMPLES']])
 
                 # write to stdout 
                 if vcf_sv_type != 'INV' or options.inv != 'drop':
