@@ -11,6 +11,7 @@ HEAD_NODE_OPTS=""
 CONFIG_PATH=""
 HEAD_NODE=""
 RECALL=1
+CHR_PREFIX="chr"
 
 usage() {
     # Print usage to stderr
@@ -28,11 +29,12 @@ usage() {
 	 printf "   -g      Aws region [${REGION}]\n"
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
 	 printf "   -f      (local) Path of config file\n"
-	 printf "   -a      Augment the graph (do not use --recall mode)\n" 
+	 printf "   -a      Augment the graph (do not use --recall mode)\n"
+	 printf "   -p      No chr prefix in chromosome names\n"
     exit 1
 }
 
-while getopts "b:re:c:f:a" o; do
+while getopts "b:re:c:f:ap" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -52,6 +54,9 @@ while getopts "b:re:c:f:a" o; do
 				;;
 		  a)
 				RECALL=0
+				;;
+		  p)
+				CHR_PREFIX=""
 				;;
         *)
             usage
@@ -125,4 +130,4 @@ else
 fi
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo chr${i}; done) ${RECALL_OPTS} --logFile call.hgsvc.log ${RESTART_FLAG}" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 1 22; echo X; echo Y); do echo ${CHR_PREFIX}${i}; done) ${RECALL_OPTS} --logFile call.hgsvc.log ${RESTART_FLAG}" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout

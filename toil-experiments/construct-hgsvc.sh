@@ -170,16 +170,20 @@ then
 	 pushd ../giab
 	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_UnionSVs_12122017/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz
 	 wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_UnionSVs_12122017/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz.tbi
+	 vcfkeepinfo svanalyzer_union_171212_v0.5.0_annotated.vcf.gz NA | vcffixup - | bgzip > giab-0.5.vcf.gz
+	 tabix -f -p vcf giab-0.5.vcf.gz
 	 popd
-	 VCF=../giab/svanalyzer_union_171212_v0.5.0_annotated.vcf.gz
+	 VCF=../giab/giab-0.5.vcf.gz
 	 NAME=GIAB
 elif [ $GRAPH == "GIAB-0.6" ]
 then
 	 pushd ../giab
 	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/HG002_SVs_Tier1_v0.6.vcf.gz
 	 wget -nc ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/HG002_SVs_Tier1_v0.6.vcf.gz.tbi
+	 vcfkeepinfo HG002_SVs_Tier1_v0.6.vcf.gz NA | vcffixup - | bgzip > giab-0.6.vcf.gz
+	 tabix -f -p vcf giab-0.6.vcf.gz
 	 popd
-	 VCF=../giab/HG002_SVs_Tier1_v0.6.vcf.gz
+	 VCF=../giab/giab-0.6.vcf.gz
 	 NAME=GIAB	 
 fi
 

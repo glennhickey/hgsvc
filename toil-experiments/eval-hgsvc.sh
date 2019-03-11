@@ -8,6 +8,8 @@ REGION="us-west-2"
 HEAD_NODE_OPTS=""
 DOWNLOAD=0
 MIN_LEN=50
+HG38=1
+NORM_TRUTH=1
 
 usage() {
     # Print usage to stderr
@@ -27,10 +29,12 @@ usage() {
 	 printf "   -c      Toil Cluster Name (created with https://github.com/vgteam/toil-vg/blob/master/scripts/create-ec2-leader.sh).  Only use if not running from head node.\n"
 	 printf "   -d      Download results locally\n"
 	 printf "   -m      Minimum length [${MIN_LEN}]\n"
+	 printf "   -p      hs37d5 reference\n"
+	 printf "   -n      only normalize calls\n"
     exit 1
 }
 
-while getopts "b:re:c:dm:" o; do
+while getopts "b:re:c:dm:pn" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -49,6 +53,12 @@ while getopts "b:re:c:dm:" o; do
 				;;
 		  m)
 				MIN_LEN=${OPTARG}
+				;;
+		  p)
+				HG38=0
+				;;
+		  n)
+				NORM_TRUTH=0
 				;;
         *)
             usage
@@ -94,20 +104,34 @@ then
 	 toil clean aws:${REGION}:${JOBSTORE_NAME}
 fi
 
-SVEVAL_OPTS="--sveval --min_sv_len $MIN_LEN --vcfeval_sample $SAMPLE_NAME"
+if [ $HG38 == 1 ]
+then
+	 FASTA="http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+else
+	 FASTA="ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz"
+fi
+
+SVEVAL_OPTS="--sveval --min_sv_len $MIN_LEN --vcfeval_sample $SAMPLE_NAME --check_inv"
+
+if [ $NORM_TRUTH == 1 ]
+then
+	 NORM_OPTS="--normalize --vcfeval_fasta ${FASTA}"
+else
+	 NORM_OPTS="--normalize_calls --vcfeval_fasta ${FASTA}"
+fi
 
 # run the job
-#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
 
-#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED}"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED}"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --normalize --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} ${NORM_OPTS}"
 
-./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS}"
 
-#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta ${FASTA} --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
-#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_bed_regions ${REGIONS_BED} --normalize   --vcfeval_fasta http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
+#./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS}   --vcfeval_fasta ${FASTA} --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
 
 if [ $DOWNLOAD == 1 ]

@@ -150,9 +150,12 @@ mkdir results-jan26
 for name in HGSVC-jan5
 do
 aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514 ./results-jan26/${name}-eval-HG00514
-#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim ./results-jan26/${name}-eval-HG00514-sim
+aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim ./results-jan26/${name}-eval-HG00514-sim
 #aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-full ./results-jan26/${name}-eval-HG00514-bayestyper
 #aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim-bayestyper-full ./results-jan26/${name}-eval-HG00514-sim-bayestyper
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim-bayestyper-feb20 ./results-jan26/${name}-eval-HG00514-sim-bayestyper-feb20
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-feb20 ./results-jan26/${name}-eval-HG00514-bayestyper-feb20
+#aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-manta-feb20 ./results-jan26/${name}-eval-HG00514-bayestyper-manta-feb20
 done
 
 cd results-jan26
@@ -170,8 +173,34 @@ done
 
 ./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
 
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_bayestyper_pass_nomis-feb20.vcf.gz ${COMPARE_REGIONS_BED}
+
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-manta-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_hc_mt_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
+
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
+
 
 # Try making HGSVC alt graphs
 ./construct-hgsvc.sh -l s3://glennhickey/grch38/grch38-alt-positions-no-hla-no-chr6_GL000251v2_alt.bed -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/HGSVC-alts-feb18
 
 ./construct-hgsvc.sh -k -n -l s3://glennhickey/grch38/grch38-alt-positions-no-hla-no-chr6_GL000251v2_alt.bed -c ${CLUSTER}3 ${JOBSTORE}3 ${OUTSTORE}/HGSVC-1kg-alts-feb18
+
+# Inversions
+
+./mce-hgsvc.sh -c ${CLUSTER}1 -C " -f ./call_conf.yaml"   ${JOBSTORE}1 ${OUTSTORE}/HGSVC-INV-JAN29 s3://${OUTSTORE}/HGSVC-INV-JAN29/HGSVC HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-INV-JAN29/HGSVC-vcfs/HGSVC.inv_HG00514.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-INV-JAN29/sim/sim-HG00514-30x.fq.gz
+
+./mce-hgsvc.sh -c ${CLUSTER}2 -C " -f ./call_conf.yaml"   ${JOBSTORE}2 ${OUTSTORE}/HGSVC-INV-JAN29 s3://${OUTSTORE}/HGSVC-INV-JAN29/HGSVC HG00514 HG00514 s3://${OUTSTORE}/HGSVC-INV-JAN29/HGSVC-vcfs/HGSVC.inv_HG00514.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+./construct-hgsvc.sh -i -c ${CLUSTER}1 ${JOBSTORE}1 ${OUTSTORE}/HGSVC-INV-FEB26
+
+# SVPOP again
+
+./mce-hgsvc.sh -c ${CLUSTER}2 -M SKIP  -C " -f ./call_conf.yaml"   ${JOBSTORE}2 ${OUTSTORE}/SVPOP-jan10 s3://${OUTSTORE}/SVPOP-jan10/SVPOP HG00514 HG00514 s3://${OUTSTORE}/SVPOP-jan10/sv-pop-explicit.vcf.gz ${COMPARE_REGIONS_BED} $FQ1 $FQ2
+
+aws s3 sync s3://${OUTSTORE}/SVPOP-jan10/eval-HG00514 ./SVPOP-jan10-eval-HG00514
+
+# then do the SMRTSV that we copied from courtyard
+./eval-hgsvc.sh -c ${CLUSTER}2 ${JOBSTORE}2 ${OUTSTORE}/SVPOP-jan10/eval-HG00514-smrtsv s3://${OUTSTORE}/SVPOP-jan10/sv-pop-explicit.vcf.gz  s3://glennhickey/outstore/SVPOP-jan10/call-HG00514-smrtsv/HG00514-smrtsv.shift.vcf.gz ${COMPARE_REGIONS_BED} HG00514
+
+aws s3 sync s3://${OUTSTORE}/SVPOP-jan10/eval-HG00514-smrtsv ./SVPOP-jan10-eval-HG00514-smrtsv
+

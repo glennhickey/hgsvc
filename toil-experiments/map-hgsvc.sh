@@ -3,7 +3,7 @@
 
 #!/bin/bash
 
-BID=0.53
+BID=0.54
 RESUME=0
 REGION="us-west-2"
 HEAD_NODE_OPTS=""
@@ -81,6 +81,9 @@ shift
 if [[ ${READS1} =~ .*.gam ]]
 then
 	 IFLAG="--gam_input_reads"
+elif [[ ${READS1} =~ .*.bam ]]
+then
+	 IFLAG="--bam_input_reads"
 else
 	 IFLAG="--fastq"
 fi

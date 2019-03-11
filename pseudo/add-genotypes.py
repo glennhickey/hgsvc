@@ -20,6 +20,8 @@ def parse_args(args):
                         help="table to look up genotypes")
     parser.add_argument("--no-hom-ref", action="store_true",
                         help="don't include 0|0 calls")
+    parser.add_argument("--ref-only", action="store_true",
+                        help="only fix REF column")
                         
     args = args[1:]
     options = parser.parse_args(args)
@@ -57,20 +59,21 @@ def main(args):
                 vcf_toks = line.split('\t')
                 tab_toks = tab_map[vcf_toks[2]]
 
-                if tab_toks[header_map['SAMPLE']] in ['CHM1', 'CHM13']:
-                    if tab_toks[header_map['CALL']] == 'HOM_ALT':
-                        gt = '1|1'
-                    elif tab_toks[header_map['CALL']] == 'HET':
-                        gt = '1|0' if tab_toks[header_map['SAMPLE']] == 'CHM1' else '0|1'
+                if not options.ref_only:
+                    if tab_toks[header_map['SAMPLE']] in ['CHM1', 'CHM13']:
+                        if tab_toks[header_map['CALL']] == 'HOM_ALT':
+                            gt = '1|1'
+                        elif tab_toks[header_map['CALL']] == 'HET':
+                            gt = '1|0' if tab_toks[header_map['SAMPLE']] == 'CHM1' else '0|1'
+                        else:
+                            assert False
+                    elif not options.no_hom_ref:
+                        gt = '0|0'
                     else:
-                        assert False
-                elif not options.no_hom_ref:
-                    gt = '0|0'
-                else:
-                    gt = None
-                    
-                if gt:
-                    vcf_toks[-1] = gt + vcf_toks[-1][1:]
+                        gt = None
+
+                    if gt:
+                        vcf_toks[-1] = gt + vcf_toks[-1][1:]
 
                 # we add one in an effort to make the reference base match the fasta
                 # vg doesn't care for symbolic alleles, but the vcf comparators do
