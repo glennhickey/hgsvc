@@ -129,6 +129,18 @@ fi
 
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS}"
 
+
+###  Same thing againt with genotype comparisons.
+
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-gt --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --genotype-eval"
+
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-gt --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} --genotype-eval"
+
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-norm-gt --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} ${NORM_OPTS} --genotype-eval"
+
+./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm-gt --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS} --genotype-eval"
+
+
 #./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta ${FASTA} --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
 #./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval-clip --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS}   --vcfeval_fasta ${FASTA} --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
