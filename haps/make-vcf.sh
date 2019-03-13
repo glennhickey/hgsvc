@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Make individual VCF for each sample (required for do-by-add.sh)
-for SAMPLE in HG00514 HG005733 NA19240
+for SAMPLE in HG00514 HG00733 NA19240
 do
 	 # Make diploid VCF out of haploid vcfs:
 	 echo "Making diploid VCF for ${SAMPLE}"

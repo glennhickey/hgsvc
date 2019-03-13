@@ -256,7 +256,7 @@ fi
 
 if [ $GRAPH != "SVPOP" ] && [ $GRAPH != "GIAB-0.5" ] && [ $GRAPH != "GIAB-0.6" ]
 then
-	 INDEX_OPTS="--all_index"
+	 INDEX_OPTS="--all_index --alt_paths"
 	 if [ $NO_UNFOLD == 0 ]
 	 then
 		  INDEX_OPTS="${INDEX_OPTS} --gbwt_prune"
