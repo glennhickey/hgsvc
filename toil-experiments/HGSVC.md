@@ -29,14 +29,14 @@ export FQBASE=
 ## Use -M SKIP, -C SKIP, -E SKIP to bypass mapping, calling, evaluation respectively (ex, if rerunning a step)
 
 # Simulation
-./mce-hgsvc.sh -c ${CLUSTER}1  ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
+./mce-hgsvc.sh -c ${CLUSTER}1  ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514-sim s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} s3://${OUTSTORE}/HGSVC-chroms-dec5/sim/sim-HG00514-30x.fq.gz
 
 # Three HGSVC Samples
-./mce-hgsvc.sh -c ${CLUSTER}1  ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/HG00514/ERR903030_1.fastq.gz ${FQBASE}/HG00514/ERR903030_2.fastq.gz 
+./mce-hgsvc.sh -c ${CLUSTER}1  ${JOBSTORE}1 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00514 HG00514 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/HG00514/ERR903030_1.fastq.gz ${FQBASE}/HG00514/ERR903030_2.fastq.gz 
 
-./mce-hgsvc.sh -c ${CLUSTER}2  ${JOBSTORE}2 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00733 HG00733 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/HG00733/ERR895347_1.fastq.gz ${FQBASE}/HG00733/ERR895347_2.fastq.gz 
+./mce-hgsvc.sh -c ${CLUSTER}2  ${JOBSTORE}2 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC HG00733 HG00733 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/HG00733/ERR895347_1.fastq.gz ${FQBASE}/HG00733/ERR895347_2.fastq.gz 
 
-./mce-hgsvc.sh -c ${CLUSTER}3  ${JOBSTORE}3 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC NA19240 NA19240 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/NA19240/ERR894724_1.fastq.gz ${FQBASE}/NA19240/ERR894724_2.fastq.gz 
+./mce-hgsvc.sh -c ${CLUSTER}3  ${JOBSTORE}3 ${OUTSTORE}/HGSVC-jan5 s3://${OUTSTORE}/HGSVC-jan5/HGSVC NA19240 NA19240 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps.vcf.gz ${COMPARE_REGIONS_BED} ${FQBASE}/NA19240/ERR894724_1.fastq.gz ${FQBASE}/NA19240/ERR894724_2.fastq.gz 
 ```
 
 #commands used to download the data
@@ -55,15 +55,15 @@ done
 #commands for bayestyper evaluation
 
 ```
-./eval-hgsvc.sh  -c ${CLUSTER}1 ${JOBSTORE}1  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh  -c ${CLUSTER}1 ${JOBSTORE}1  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
 
-./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-full s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_platypus_bayestyper_pass_nomis_maxgpp.vcf.gz ${COMPARE_REGIONS_BED}
 
-./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_bayestyper_pass_nomis-feb20.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/HG00514_sim30x_hgsvc_bayestyper_pass_nomis-feb20.vcf.gz ${COMPARE_REGIONS_BED}
 
-./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-manta-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_hc_mt_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-manta-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_hc_mt_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
 
-./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC-vcfs/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
+./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
 
 for name in HGSVC-jan5
 do
