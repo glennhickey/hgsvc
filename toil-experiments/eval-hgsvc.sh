@@ -120,6 +120,8 @@ else
 	 NORM_OPTS="--normalize_calls --vcfeval_fasta ${FASTA}"
 fi
 
+set -e
+
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS}"
 
@@ -140,6 +142,7 @@ fi
 
 ./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/sveval-clip-norm-gt --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF} ${SVEVAL_OPTS} --vcfeval_bed_regions ${REGIONS_BED} ${NORM_OPTS} --genotype_eval"
 
+TOIL_ERROR="!$"
 
 #./ec2-run.sh ${HEAD_NODE_OPTS} -n r3.8xlarge:${BID},r3.8xlarge "vcfeval aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME}/vcfeval --whole_genome_config --vcfeval_baseline ${TRUTH_VCF} --call_vcf ${CALLS_VCF}  --vcfeval_fasta ${FASTA} --vcfeval_opts \" --squash-ploidy --Xmax-length 15000\""
 
@@ -150,3 +153,5 @@ if [ $DOWNLOAD == 1 ]
 then
 	 aws s3 sync s3://${OUTSTORE_NAME} ./`basename $OUTSTORE_NAME`
 fi
+
+exit $TOIL_ERROR
