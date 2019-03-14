@@ -32,6 +32,8 @@ def parse_args(args):
                         choices=["leave", "drop", "msnp"],
                         help="leave: leave inversions as they are.  drop: remove them. "
                         "msnp: explicitly write as multibase snps")
+    parser.add_argument("--leave-gt", action="store_true",
+                        help="dont fix genotypes. (use for smrtsv output as opposed to discovery vcf)")
                         
     args = args[1:]
     options = parser.parse_args(args)
@@ -147,7 +149,8 @@ def main(args):
                     assert False
 
                 # convert from haploid to diploid for sake of downstream tools
-                vcf_toks = make_diploid(vcf_toks, samples, bed_toks[header_map['MERGE_SAMPLES']])
+                if not options.leave_gt:
+                    vcf_toks = make_diploid(vcf_toks, samples, bed_toks[header_map['MERGE_SAMPLES']])
 
                 # write to stdout 
                 if vcf_sv_type != 'INV' or options.inv != 'drop':
