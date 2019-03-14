@@ -161,9 +161,11 @@ then
 	 pushd ../pseudo
 	 ./download.sh
 	 ./add-genotypes.py pseudo_diploid.vcf.gz reduced.tab | bgzip > pseudo_diploid_gt.vcf.gz
+	 ./make-explicit.py pseudo_diploid_gt.vcf.gz | bgzip > pseudo_diploid-explicit.vcf.gz
 	 tabix -f -p vcf pseudo_diploid_gt.vcf.gz
+	 tabix -f -p vcf pseudo_diploid-explicit.vcf.gz
 	 popd
-	 VCF=../pseudo/pseudo_diploid_gt.vcf.gz
+	 VCF=../pseudo/pseudo_diploid-explicit.vcf.gz
 	 NAME=CHMPD
 elif [ $GRAPH == "GIAB-0.5" ]
 then
