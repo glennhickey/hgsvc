@@ -161,7 +161,8 @@ then
 	 pushd ../pseudo
 	 ./download.sh
 	 ./add-genotypes.py pseudo_diploid.vcf.gz reduced.tab | bgzip > pseudo_diploid_gt.vcf.gz
-	 ./make-explicit.py pseudo_diploid_gt.vcf.gz | bgzip > pseudo_diploid-explicit.vcf.gz
+	 # Note: HG38 should point to a reference fasta that has a .fai index
+	 ./make-explicit.py pseudo_diploid_gt.vcf.gz --fasta ${HG38} | vcfkeepinfo - NA | vcffixup - | bgzip > pseudo_diploid-explicit.vcf.gz
 	 tabix -f -p vcf pseudo_diploid_gt.vcf.gz
 	 tabix -f -p vcf pseudo_diploid-explicit.vcf.gz
 	 popd

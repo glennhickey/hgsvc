@@ -4,7 +4,7 @@
 Assume:
 POS coordinates are correct
 REF entries are wrong
-SEQ elements are correct (but don't contain match reference base at beginning)
+SEQ elements are correct (but don't contain match reference base at beginning) but shifted for deletions
 
 -> pull REF from Fasta
 -> deleteion: REF = REF + SEQ, ALT = REF
@@ -28,6 +28,10 @@ def parse_args(args):
 
     parser.add_argument("vcf", type=str,
                         help="VCF whose SV sequences we want to fill out")
+    parser.add_argument("--fasta",
+                        default='ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/'
+                        'GRCh38_full_analysis_set_plus_decoy_hla.fa',
+                        help="Fasta file for reference.  Needs .fai as well")
                         
     args = args[1:]
     options = parser.parse_args(args)
@@ -43,8 +47,7 @@ def main(args):
 
 
     # fasta index needed for reference bases
-    faidx = pysam.FastaFile('ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/'
-                            'GRCh38_full_analysis_set_plus_decoy_hla.fa')
+    faidx = pysam.FastaFile(options.fasta)
 
     # print the edited vcf
     with open_input(options.vcf) as vcf_file:
@@ -66,6 +69,9 @@ def main(args):
                     vcf_toks[4] = ref_seq + sv_seq
                 elif vcf_sv_type == 'DEL':
                     vcf_toks[3] = ref_seq + sv_seq
+                    # it looks like the vcf_seqs are shifted.  we assume POS is gospel an reload from VCF
+                    ref_del_seq = faidx.fetch(vcf_chrom, vcf_pos - 1, vcf_pos - 1 + len(vcf_toks[3]))
+                    vcf_toks[3] = ref_del_seq
                     vcf_toks[4] = ref_seq
 
                 sys.stdout.write('\t'.join(vcf_toks))
