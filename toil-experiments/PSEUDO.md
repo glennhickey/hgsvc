@@ -7,8 +7,7 @@
 ./mce-hgsvc.sh -c ${CLUSTER}3 ${JOBSTORE}3 ${OUTSTORE}/CHMPD-feb12 s3://${OUTSTORE}/CHMPD-feb12/CHMPD PSEUDOSET PSEUDOSET-30 s3://${OUTSTORE}/CHMPD-feb12/pseudo_diploid-explicit.vcf.gz ${COMPARE_REGIONS_BED} s3://majorsv-ucsc/gt/gam/aln_30x.gam
 #done
 
-mkdir pseudo-results-feb12
-aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30 ./pseudo-results-feb12/CHMPD-feb12-eval-PSEUDOSET-30
+aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30 ./CHMPD-feb12-eval-PSEUDOSET
 
 
 # then do the SMRTSV that we copied from courtyard
@@ -17,7 +16,7 @@ aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30 ./pseudo-results-feb1
 
 ./eval-hgsvc.sh -c ${CLUSTER}1 ${JOBSTORE}1x ${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30-smrtsv s3://${OUTSTORE}/CHMPD-feb12/pseudo_diploid-explicit.vcf.gz  s3://glennhickey/outstore/CHMPD-feb12/call-PSEUDOSET-30-smrtsv/PSEUDOSET-smrtsv.explicit.vcf.gz ${COMPARE_REGIONS_BED} PSEUDOSET
 
-aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30-smrtsv ./CHMPD-jan10-eval-PSEUDOSET-smrtsv
-aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30 ./CHMPD-jan10-eval-PSEUDOSET
+aws s3 sync s3://${OUTSTORE}/CHMPD-feb12/eval-PSEUDOSET-30-smrtsv ./CHMPD-feb12-eval-PSEUDOSET-smrtsv
+
 
 

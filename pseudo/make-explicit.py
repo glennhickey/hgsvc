@@ -69,7 +69,7 @@ def main(args):
                     vcf_toks[4] = ref_seq + sv_seq
                 elif vcf_sv_type == 'DEL':
                     vcf_toks[3] = ref_seq + sv_seq
-                    # it looks like the vcf_seqs are shifted.  we assume POS is gospel an reload from VCF
+                    # it looks like the vcf_seqs are shifted.  we assume POS is gospel an reload from Fasta
                     ref_del_seq = faidx.fetch(vcf_chrom, vcf_pos - 1, vcf_pos - 1 + len(vcf_toks[3]))
                     vcf_toks[3] = ref_del_seq
                     vcf_toks[4] = ref_seq
