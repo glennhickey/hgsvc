@@ -42,13 +42,9 @@ export FQBASE=
 #commands used to download the data
 
 ```
-mkdir results-jan26
-for name in HGSVC-jan5
+for name in HG00514 HG00733 NA19240 HG00514-sim
 do
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim ./results-jan26/${name}-eval-HG00514-sim
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514 ./results-jan26/${name}-eval-HG00514
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00733 ./results-jan26/${name}-eval-HG00733
-aws s3 sync s3://${OUTSTORE}/${name}/eval-NA19240 ./results-jan26/${name}-eval-NA19240
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-${name} ./HGSVC-jan5-eval-${name}
 done
 ```
 
@@ -65,13 +61,10 @@ done
 
 ./eval-hgsvc.sh  -c ${CLUSTER}2 ${JOBSTORE}2  ${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-feb20 s3://${OUTSTORE}/HGSVC-jan5/HGSVC.haps_HG00514.vcf.gz s3://${OUTSTORE}/HGSVC-Bayestyper/ERR903030_hgsvc_pp_bayestyper_pass_nomis_feb20.vcf.gz ${COMPARE_REGIONS_BED}
 
-for name in HGSVC-jan5
-do
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-full ./results-jan26/${name}-eval-HG00514-bayestyper
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim-bayestyper-full ./results-jan26/${name}-eval-HG00514-sim-bayestyper
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-sim-bayestyper-feb20 ./results-jan26/${name}-eval-HG00514-sim-bayestyper-feb20
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-feb20 ./results-jan26/${name}-eval-HG00514-bayestyper-feb20
-aws s3 sync s3://${OUTSTORE}/${name}/eval-HG00514-bayestyper-manta-feb20 ./results-jan26/${name}-eval-HG00514-bayestyper-manta-feb20
-done
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-full ./HGSVC-jan5-eval-HG00514-bayestyper
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-full ./HGSVC-jan5-eval-HG00514-sim-bayestyper
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-HG00514-sim-bayestyper-feb20 ./HGSVC-jan5-eval-HG00514-sim-bayestyper-feb20
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-feb20 ./HGSVC-jan5-eval-HG00514-bayestyper-feb20
+aws s3 sync s3://${OUTSTORE}/HGSVC-jan5/eval-HG00514-bayestyper-manta-feb20 ./HGSVC-jan5-eval-HG00514-bayestyper-manta-feb20
 ```
 
