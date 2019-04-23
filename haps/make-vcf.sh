@@ -1,11 +1,18 @@
 #!/bin/bash
 
+if [ ! -f hg38.fa.gz ]
+then
+	 wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+	 gzip -d hg38.fa
+	 bgzip -@ 4 hg38.fa
+fi
+
 # Make individual VCF for each sample (required for do-by-add.sh)
 for SAMPLE in HG00514 HG00733 NA19240
 do
 	 # Make diploid VCF out of haploid vcfs:
 	 echo "Making diploid VCF for ${SAMPLE}"
-	 ./hap-merge.py ${SAMPLE}.hap0.vcf.gz ${SAMPLE}.hap1.vcf.gz | vcfuniq | vcfkeepinfo - NA | vcffixup - | bgzip > HGSVC.${SAMPLE}.vcf.gz
+	 ./hap-merge.py ${SAMPLE}.hap0.vcf.gz ${SAMPLE}.hap1.vcf.gz | vcfuniq | vcfkeepinfo - NA | vcffixup - | bcftools norm - -f hg38.fa.gz | bgzip > HGSVC.${SAMPLE}.vcf.gz
 	 tabix -f -p vcf HGSVC.${SAMPLE}.vcf.gz
 done
 
