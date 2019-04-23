@@ -112,7 +112,7 @@ fi
 MAP_OPTS=""
 if [ $MPMAP == 1 ]
 then
-	 MAP_OPTS="--multipath"
+	 MAP_OPTS="--multipath --mpmap_opts ' -E -S'"
 fi
 if [ $USE_ID_RANGES == 1 ]
 then
