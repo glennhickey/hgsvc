@@ -18,7 +18,7 @@ CONFIG_PATH=""
 #ALT_REGIONS="--alt_regions https://raw.githubusercontent.com/glennhickey/toil-vg/construct/data/grch38-alt-positions.bed"
 #ALT_REGIONS="--alt_regions s3://glennhickey/grch38/grch38-alt-positions-no-hla.bed"
 ALT_REGIONS=""
-NODECOY=0
+NODECOY=1
 HG38=1
 
 usage() {
@@ -44,7 +44,7 @@ usage() {
 	 printf "   -n         no unfolding for gcsa prunding\n"
 	 printf "   -l BED     alt regions\n"
 	 printf "   -o         (local) Path of config file\n"
-	 printf "   -D         Dont include HS38d1 decoy sequences\n"
+	 printf "   -D         Include HS38d1 decoy sequences\n"
     exit 1
 }
 
@@ -99,7 +99,7 @@ while getopts "b:re:c:kpsia:fnl:o:DGH" o; do
 				CONFIG_PATH=${OPTARG}
 				;;
 		  D)
-				NODECOY=1
+				NODECOY=0
 				;;
         *)
             usage
@@ -259,7 +259,7 @@ fi
 
 if [ $GRAPH != "SVPOP" ] && [ $GRAPH != "GIAB-0.5" ] && [ $GRAPH != "GIAB-0.6" ]
 then
-	 INDEX_OPTS="--all_index --alt_paths"
+	 INDEX_OPTS="--all_index"
 	 if [ $NO_UNFOLD == 0 ]
 	 then
 		  INDEX_OPTS="${INDEX_OPTS} --gbwt_prune"
@@ -277,6 +277,8 @@ if [ $FORCE_OUTSTORE == 1 ]
 then
 	 INDEX_OPTS="${INDEX_OPTS} --force_outstore"
 fi
+
+INDEX_OPTS="${INDEX_OPTS} --alt_paths --alt_path_gam_index"
 
 # run the job
 ./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --validate --handle_svs ${CONFIG_OPTS} --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee "construct.${OUT_NAME}-$(date).stdout"
